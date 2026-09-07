@@ -1,0 +1,189 @@
+<resources>
+    <string name="app_name">JNVST GURU</string>
+    <string name="app_slogan">Your Success, Our Mission ✨</string>
+    <string name="class_6_label">Class 6</string>
+    <string name="language_english">English</string>
+
+    <!-- Header -->
+    <string name="day_streak_label">Day Streak</string>
+
+    <!-- Hero Banner -->
+    <string name="hero_title">Hello, Student! 👋</string>
+    <string name="hero_subtitle">Every day you practice,\nyou are getting better!</string>
+    <string name="hero_cta">Let\'s Practice</string>
+
+    <!-- Continue Practice Card -->
+    <string name="continue_practice_label">Continue Practice</string>
+    <string name="continue_button">Continue</string>
+    <string name="progress_format">%1$d / %2$d Questions</string>
+
+    <!-- Progress Summary -->
+    <string name="progress_summary_title">Your Progress</string>
+    <string name="time_filter_week">This Week</string>
+    <string name="questions_solved">Questions\nSolved</string>
+    <string name="average_accuracy">Average\nAccuracy</string>
+    <string name="study_time">Study\nTime</string>
+    <string name="current_streak">Day\nStreak</string>
+
+    <string name="streak_days">%1$d</string>
+    <string name="percentage_format">%1$d%%</string>
+    <string name="study_time_format">%1$dh %2$dm</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_practice">Practice</string>
+    <string name="nav_tests">Tests</string>
+    <string name="nav_progress">Progress</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Subjects -->
+    <string name="subject_mental_ability">Mental Ability</string>
+    <string name="subject_mental_desc">Strengthen your logical reasoning and thinking skills.</string>
+    <string name="subject_arithmetic">Arithmetic</string>
+    <string name="subject_arithmetic_desc">Master numbers, calculations and logic.</string>
+    <string name="subject_language">Language</string>
+    <string name="subject_language_desc">Improve reading and vocabulary skills.</string>
+
+    <string name="topic_count_format">%1$d Topics</string>
+
+    <!-- Topic Detail -->
+    <string name="label_questions">Questions</string>
+    <string name="label_duration">Duration</string>
+    <string name="label_difficulty">Difficulty</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="mins_format">%1$d mins</string>
+
+    <string name="title_choose_mode">Choose Practice Mode</string>
+    <string name="mode_practice_title">Practice Mode</string>
+    <string name="mode_practice_desc">Learn and practice with explanations</string>
+    <string name="mode_test_title">Test Mode</string>
+    <string name="mode_test_desc">Take a test without explanations</string>
+    <string name="mode_timed_title">Timed Test</string>
+    <string name="mode_timed_desc">Challenge yourself with time limit</string>
+    <string name="btn_start_practice">Start Practice</string>
+
+    <!-- Misc -->
+    <string name="consistency_banner_title">Consistency is the key to success!</string>
+    <string name="consistency_banner_msg">Keep practicing, keep improving.</string>
+    <string name="why_topic_wise_title">Why Topic-wise?</string>
+    <string name="why_topic_wise_msg">Practice specific topics, improve your weak areas and perform better.</string>
+    <string name="step_select_subject">Step 1: Select a Subject</string>
+    <string name="step_select_subject_msg">Choose a subject to see its topics</string>
+    <string name="label_topics">Topics</string>
+    <string name="btn_see_all_topics">See All %1$d Topics</string>
+
+    <!-- Topics: Mental Ability -->
+    <string name="topic_analogy">Analogy</string>
+    <string name="topic_classification">Classification</string>
+    <string name="topic_figure_series">Figure Series</string>
+
+    <!-- Topics: Arithmetic -->
+    <string name="topic_number_system">Number System</string>
+    <string name="topic_fractions">Fractions</string>
+    <string name="topic_decimals">Decimals</string>
+
+    <!-- Topics: Language -->
+    <string name="topic_reading_comprehension">Reading Comprehension</string>
+    <string name="topic_vocabulary">Vocabulary</string>
+    <string name="topic_grammar">Grammar</string>
+
+    <!-- Tests -->
+    <string name="tests_banner_title">Test. Analyze. Improve.</string>
+    <string name="tests_banner_msg">Track your performance and become a JNVST topper!</string>
+    <string name="action_mock_tests">Mock Tests</string>
+    <string name="action_mock_subtitle">Full length mock tests</string>
+    <string name="action_mock_desc">Full length mock tests. Simulate real exam.</string>
+    <string name="action_pyq">Previous Year Papers</string>
+    <string name="action_pyq_subtitle">Solve past JNVST papers year-wise.</string>
+    <string name="action_chapter_tests">Chapter Tests</string>
+    <string name="action_topic_subtitle">Practice by topic</string>
+    <string name="action_chapter_desc">Test your learning in specific chapters.</string>
+    <string name="action_custom_tests">Custom Tests</string>
+    <string name="action_custom_desc">Create your own test as per your needs.</string>
+
+    <string name="action_subject_practice">Subject-wise Practice</string>
+    <string name="action_subject_subtitle">Practice by subject</string>
+    <string name="action_topic_practice">Topic-wise Practice</string>
+
+    <string name="btn_start_test">Start Test</string>
+    <string name="test_info_format">%1$d Questions • %2$d min • Class 6</string>
+    <string name="title_test_instructions">Test Instructions</string>
+    <string name="total_questions">Total Questions</string>
+    <string name="total_time">Total Time</string>
+    <string name="question_type">Type</string>
+    <string name="marking_scheme">Marking Scheme</string>
+    <string name="mcq_type">Multiple Choice Questions</string>
+    <string name="marking_desc">+1 for correct answer\n0 for incorrect answer</string>
+    <string name="instruction_review">You can review and change answers before submitting the test.</string>
+
+    <string name="label_mark_review">Mark for Review</string>
+    <string name="btn_submit">Submit</string>
+    <string name="btn_previous">Previous</string>
+    <string name="btn_next">Next</string>
+    <string name="btn_clear">Clear</string>
+
+    <string name="title_test_completed">Test Completed!</string>
+    <string name="test_completed_msg">Great job! 🎉</string>
+    <string name="label_your_score">Your Score</string>
+    <string name="label_correct">Correct</string>
+    <string name="label_incorrect">Incorrect</string>
+    <string name="label_unattempted">Unattempted</string>
+    <string name="btn_view_solutions">View Solutions</string>
+    <string name="btn_test_analysis">Test Analysis</string>
+    <string name="status_excellent">Excellent</string>
+
+    <!-- Progress -->
+    <string name="progress_banner_title">Your Overall Performance</string>
+    <string name="progress_banner_msg">Great! You\'re improving steadily. Keep it up! 🚀</string>
+    <string name="tab_overview">Overview</string>
+    <string name="tab_subjects">Subjects</string>
+    <string name="tab_topics">Topics</string>
+    <string name="tab_tests">Tests</string>
+    <string name="label_performance_trend">Performance Trend</string>
+    <string name="label_accuracy_percent">Accuracy (%)</string>
+    <string name="label_recent_activity">Recent Activity</string>
+    <string name="btn_view_all">View All</string>
+    <string name="label_overall_accuracy">Overall Accuracy</string>
+    <string name="label_subject_wise_progress">Subject-wise Progress</string>
+    <string name="label_topics_in">Topics in %1$s</string>
+
+    <!-- Profile -->
+    <string name="btn_edit_profile">Edit Profile</string>
+    <string name="label_tests_taken">Tests Taken</string>
+    <string name="label_avg_accuracy">Avg. Accuracy</string>
+    <string name="label_best_score">Best Score</string>
+    <string name="label_achievements">Achievements</string>
+    <string name="label_study_goals">Study Goals</string>
+    <string name="label_bookmarks">Bookmarks</string>
+    <string name="label_downloads">Downloads</string>
+    <string name="label_settings">Settings</string>
+
+    <!-- Auth -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Login to access your prep journey</string>
+    <string name="label_email">Email Address</string>
+    <string name="label_password">Password</string>
+    <string name="btn_login">Login</string>
+    <string name="error_empty_fields">Email and password cannot be empty</string>
+
+    <!-- Selection Screens -->
+    <string name="title_practice_mode">Practice</string>
+    <string name="title_topic_practice">Topic-wise Practice</string>
+    <string name="title_subject_practice">Subject-wise Practice</string>
+    <string name="title_select_subject">Select Subject</string>
+    <string name="title_select_topic">Select Topic</string>
+    <string name="title_select_difficulty">Select Difficulty</string>
+    <string name="title_select_set">Select Set</string>
+
+    <string name="set_format">Set %1$d</string>
+    <string name="placeholder_session_title">Practice Session: %1$s</string>
+    <string name="placeholder_session_msg">Question engine implementation coming soon!</string>
+
+    <!-- Practice Session -->
+    <string name="label_question_counter">Question %1$d of %2$d</string>
+    <string name="msg_loading_questions">Loading questions…</string>
+    <string name="msg_no_questions">No questions found for this selection.</string>
+    <string name="msg_error_questions">Something went wrong while fetching questions.</string>
+</resources>

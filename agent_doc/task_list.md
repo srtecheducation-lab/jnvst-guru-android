@@ -1,0 +1,22 @@
+- [x] Phase 1: Networking Foundation
+- [x] Phase 2: Login & API Integration
+    - [x] Authentication Layer
+    - [x] Networking Layer
+    - [x] Data & Domain
+    - [x] Practice Flow Wiring
+    - [x] Navigation
+- [x] Phase 3: Selection Flow UI
+- [x] Phase 4: Question Engine Implementation
+    - [x] Implement `PracticeSessionScreen` UI
+    - [x] Connect ViewModel states to UI
+    - [x] Handle loading/error/empty states
+    - [x] Implement local option selection persistence
+    - [x] Add Prev/Next navigation
+    - [x] Wire into `JnvstNavGraph`
+- [x] Phase 5: Practice Submission Integration
+    - [x] Define `PracticeAttemptRequestDto` and `PracticeAttemptResponseDto`
+    - [x] Implement `submitPracticeAttempt` in Repository and API Service
+    - [x] Add submission logic to `PracticeViewModel`
+    - [x] Update `PracticeSessionScreen` with Submit button
+    - [x] Implement `PracticeResultScreen` to display backend results
+    - [x] Wire submission flow in `JnvstNavGraph`
