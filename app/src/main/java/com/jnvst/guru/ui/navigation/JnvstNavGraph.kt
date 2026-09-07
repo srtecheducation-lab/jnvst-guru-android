@@ -220,7 +220,10 @@ fun JnvstNavGraph(
                 viewModel = practiceViewModel,
                 onBackClick = { navController.popBackStack() },
                 onFinish = { 
-                    navController.navigate(Screen.PracticeResult.route) {
+                    val route = Screen.PracticeResult.route + 
+                        "?mode=$mode&subjectId=$subjectId&difficulty=$difficulty&page=$page" + 
+                        (if (topicId != null) "&topicId=$topicId" else "")
+                    navController.navigate(route) {
                         popUpTo(Screen.PracticeSession.route) { inclusive = true }
                     }
                 }
@@ -244,7 +247,8 @@ fun JnvstNavGraph(
             val topicId = backStackEntry.arguments?.getString("topicId")
 
             androidx.compose.runtime.LaunchedEffect(mode, subjectId, difficulty, page) {
-                if (mode != null && subjectId != null && difficulty != null && page != -1) {
+                if (practiceViewModel.submissionResult.value == null &&
+                    mode != null && subjectId != null && difficulty != null && page != -1) {
                     practiceViewModel.loadLatestAttempt(mode, subjectId, topicId, difficulty, page)
                 }
             }

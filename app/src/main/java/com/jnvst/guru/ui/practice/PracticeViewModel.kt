@@ -58,7 +58,7 @@ class PracticeViewModel(
 
     private var practiceMetadata: PracticeMetadata? = null
 
-    private fun clearSessionState() {
+    private fun resetSessionState() {
         _questions.value = Resource.Loading()
         _submissionResult.value = null
         _latestAttempt.value = null
@@ -71,10 +71,9 @@ class PracticeViewModel(
     }
 
     fun startPractice(mode: String, subjectId: String, topicId: String?, difficulty: String, page: Int) {
+        resetSessionState()
+        _currentQuestionIndex.value = 0
         viewModelScope.launch {
-            clearSessionState()
-            _currentQuestionIndex.value = 0
-            
             val type = when(topicId) {
                 "analogy" -> "ANALOGY"
                 "number_system" -> "NUMBER_SYSTEM"
@@ -141,8 +140,8 @@ class PracticeViewModel(
     }
 
     fun loadSetStatuses(mode: String, subjectId: String, topicId: String?, difficulty: String) {
+        resetSessionState() // Synchronously reset any stale data
         viewModelScope.launch {
-            clearSessionState() // Reset any stale session data when returning to selection
             _setStatuses.value = Resource.Loading()
             val type = when(topicId) {
                 "analogy" -> "ANALOGY"
@@ -156,11 +155,11 @@ class PracticeViewModel(
     }
 
     fun loadLatestAttempt(mode: String, subjectId: String, topicId: String?, difficulty: String, page: Int) {
+        _submissionResult.value = null // Clear fresh submission when viewing history
+        _latestAttempt.value = Resource.Loading()
+        _isReviewMode.value = false
+        
         viewModelScope.launch {
-            _latestAttempt.value = Resource.Loading()
-            _submissionResult.value = null // Clear fresh submission when viewing history
-            _isReviewMode.value = false
-            
             val type = when(topicId) {
                 "analogy" -> "ANALOGY"
                 "number_system" -> "NUMBER_SYSTEM"
@@ -173,12 +172,13 @@ class PracticeViewModel(
     }
 
     fun enterReviewMode(mode: String, subjectId: String, topicId: String?, difficulty: String, page: Int) {
+        _submissionResult.value = null
+        _questions.value = Resource.Loading()
+        _isReviewMode.value = true
+        _currentQuestionIndex.value = 0
+        
         viewModelScope.launch {
-            _submissionResult.value = null
-            _isReviewMode.value = true
-            
             // 1. Load questions first
-            _questions.value = Resource.Loading()
             val type = when(topicId) {
                 "analogy" -> "ANALOGY"
                 "number_system" -> "NUMBER_SYSTEM"
