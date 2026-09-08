@@ -12,6 +12,7 @@ To provide a high-quality, structured, and accessible digital learning environme
 - **Practice:** 
     - **Subject-wise:** Mental Ability, Arithmetic, and Language.
     - **Topic-wise:** Granular practice for specific concepts within subjects.
+    - **Selection Flow:** Home -> Subject -> Difficulty (Easy/Med/Hard) -> Set (20 questions each).
 - **Previous Year Questions (PYQs):** Authentic question papers from past exams for realistic practice.
 - **Mock Tests:** Full-length timed tests to simulate the actual exam environment.
 - **Progress:** Detailed analytics and performance tracking to identify strengths and weaknesses.
@@ -28,89 +29,38 @@ To provide a high-quality, structured, and accessible digital learning environme
 - **Language:** Kotlin
 - **UI:** Jetpack Compose with Material 3.
 - **Concurrency:** Kotlin Coroutines and Flow for reactive data streams.
-- **Dependency Injection:** Hilt (Recommended for modern Android apps).
-- **Persistence:** Room Database for offline-first capability.
+- **Dependency Injection:** Hilt (Future).
+- **Persistence:** Room Database (Future local caching).
 - **Networking:** Retrofit + OkHttp.
 - **Auth:** Supabase Auth (Kotlin Client).
-- **Navigation:** Jetpack Compose Navigation (Type-safe).
+- **Navigation:** Jetpack Compose Navigation (Type-safe query params).
 
-## 5. Backend Tech Stack (Future)
+## 5. Backend Tech Stack
 - **Language:** Java
 - **Framework:** Spring Boot
-- **API Style:** RESTful with well-defined contracts.
+- **Database:** PostgreSQL (via Supabase).
+- **API Style:** RESTful with Bearer JWT protection.
 
-## 6. Database
-- **Local:** Room (SQLite) for caching and offline practice.
-- **Remote (Future):** PostgreSQL.
-
-## 7. UI/UX Principles
+## 6. UI/UX Principles
 - **Material 3:** Strict adherence to Material Design 3 guidelines.
-- **Clean UX:** Minimalist, distraction-free interface suitable for young students.
-- **Usability:** Large touch targets, clear typography, and intuitive navigation.
-- **Accessibility:** Support for screen readers, high contrast, and scalable text.
+- **Class 6 Friendly:** Minimalist, high-contrast, large touch targets, and student-centric wording.
+- **Dynamic Feedback:** Real-time selection indicators and visual review modes (Green/Red) for answers.
 
-## 8. Multilingual Strategy
+## 7. Multilingual Strategy
 - **Resource Bundling:** Use standard Android `res/values/strings.xml` for all UI text.
-- **No Hard-coding:** Absolute prohibition on hard-coded user-facing strings in Kotlin files.
-- **L10n Ready:** Architecture must support right-to-left (RTL) and different character sets from Day 1.
+- **Profile-based Language:** Student's `preferredLanguage` (en/bn) is fetched from the profile API.
+- **API Mapping:** App maps `en` -> `ENGLISH` and `bn` -> `BENGALI` for backend question requests.
 
-## 9. Performance Principles
-- **Offline-First:** Critical features (Practice, PYQs) should work without an active internet connection once downloaded.
-- **Smooth UI:** Maintain 60/120 FPS for all animations and transitions.
-- **Efficient Data:** Optimize Room queries and use Flow for efficient UI updates.
+## 8. Development Roadmap
+- **Phase 1:** Networking Foundation & Auth (Supabase).
+- **Phase 2:** Navigation & V1 UI Screens.
+- **Phase 3:** Question Engine & Practice Flow.
+- **Phase 4:** Submission & Result Analytics.
+- **Phase 5:** Review Mode & Set Status Persistence.
+- **Phase 6:** Language Support & Profile Integration.
 
-## 10. Scalability Principles
-- **Exam Agnostic Core:** The core logic for testing, practice, and progress should be reusable for Class 9 and beyond.
-- **Modular Build:** Ability to split features into dynamic delivery modules if the app size grows significantly.
-
-## 11. Navigation
-- **Structure:** Bottom Navigation for primary destinations (Home, Practice, Mock Tests, Progress).
-- **Flows:** Deep-linking support and nested navigation for complex sections like Mock Tests.
-
-## 12. Screen Specifications
-- **Home:** High-fidelity dashboard featuring:
-    - **Header:** App name, slogan, day streak indicator, and notification badge.
-    - **Selectors:** Quick switchers for Class level and App Language.
-    - **Hero Banner:** Motivational card with a direct "Let's Practice" action.
-    - **Continue Practice:** Large horizontal card showing current subject/topic progress.
-    - **Your Progress:** Grid of metrics (Solved, Accuracy, Study Time, Streak) with weekly filtering.
-    - **Action Cards:** Colorful horizontal entries for Subject/Topic practice, PYQs, and Mock Tests.
-    - **Navigation:** Persistent bottom bar for Home, Practice, Tests, Progress, and Profile.
-
-## 13. Data Models
-- **Subject:** `id`, `name`, `icon`, `description`.
-- **Topic:** `id`, `subjectId`, `name`, `order`.
-- **Question:** `id`, `topicId`, `content`, `options`, `correctOption`, `explanation`, `type` (Text/Image).
-- **Test:** `id`, `title`, `duration`, `questionCount`, `type` (Practice/Mock/PYQ).
-- **Result:** `id`, `testId`, `score`, `timestamp`, `questionAnalysis`.
-
-## 14. Coding Rules
-- **Separation of Concerns:** No business logic in Composables; no UI dependencies in Repositories.
-- **Naming:** Consistent naming for ViewModels (`FeatureViewModel`), Repositories (`FeatureRepository`), and Use Cases (`GetFeatureUseCase`).
-- **Testing:** Unit tests for Domain and Data layers; UI tests for critical user flows.
-- **KDoc:** Document complex logic and public APIs.
-
-## 15. Dependencies
-*(Currently kept minimal)*
-- `androidx.compose.*`
-- `androidx.room.*`
-- `androidx.navigation.*`
-- `androidx.hilt.*`
-- `kotlinx.coroutines.*`
-
-## 16. Development Roadmap
-- **Phase 1:** Core Architecture, Navigation, and Local Data Setup.
-- **Phase 2:** Home and Subject-wise Practice (Class 6).
-- **Phase 3:** PYQs and Mock Test Engine.
-- **Phase 4:** Progress Tracking and Analytics.
-- **Phase 5:** Multi-exam support (Class 9).
-
-## 17. Decisions
-- **[2026-08-30]:** Project initialized with Clean Architecture and Compose.
-- **[2026-08-30]:** Decision to remain backend-agnostic initially, using Room for local data.
-- **[2026-08-30]:** All assistant-generated markdown documentation (Plans, Task Lists, Walkthroughs) must be stored exclusively in `agent_doc/` at the project root.
-
-## 18. Documentation Strategy
-- **Location:** All `.md` files related to project context, implementation plans, and progress tracking must reside in `agent_doc/` at the project root.
-- **Purpose:** Centralize knowledge for the coding assistant to ensure consistency across sessions and features.
-- **Updates:** Documents should be updated iteratively as new features are implemented.
+## 9. Navigation Structure
+- **Root:** `LoginScreen` (if no session) or `HomeScreen`.
+- **Practice Session:** `PracticeSessionScreen` handles both fresh attempts and Review Mode.
+- **Results:** `PracticeResultScreen` displays backend stats and provides Review/Re-attempt actions.
+- **Type-Safety:** Route arguments include `mode`, `subjectId`, `topicId`, `difficulty`, and `page`.

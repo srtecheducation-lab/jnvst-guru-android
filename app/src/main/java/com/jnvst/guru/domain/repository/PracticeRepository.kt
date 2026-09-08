@@ -14,6 +14,7 @@ interface PracticeRepository {
     suspend fun getArithmeticQuestions(
         type: String?,
         difficulty: String?,
+        language: String?,
         page: Int,
         size: Int
     ): Resource<List<Question>>
@@ -41,4 +42,6 @@ interface PracticeRepository {
         difficulty: String,
         page: Int
     ): Resource<PracticeAttempt>
+
+    suspend fun getStudentProfile(): Resource<StudentProfile>
 }

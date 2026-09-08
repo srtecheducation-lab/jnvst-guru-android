@@ -84,20 +84,28 @@ class PracticeRepositoryImpl : PracticeRepository {
     override suspend fun getArithmeticQuestions(
         type: String?,
         difficulty: String?,
+        language: String?,
         page: Int,
         size: Int
     ): Resource<List<Question>> {
         return try {
-            val response = NetworkModule.arithmeticService.getArithmeticQuestions(type, difficulty, page, size)
-            val questions = response.content.map { dto ->
-                Question(
-                    id = dto.id,
-                    questionType = dto.questionType,
-                    questionText = dto.questionText,
-                    options = listOf(dto.optionA, dto.optionB, dto.optionC, dto.optionD),
-                    difficulty = dto.difficulty
-                )
-            }
+            val response = NetworkModule.arithmeticService.getArithmeticQuestions(type, difficulty, language, page, size)
+            val questions = response.content
+                .filter { it.questionText != null && it.optionA != null } // Skip incomplete/null questions
+                .map { dto ->
+                    Question(
+                        id = dto.id,
+                        questionType = dto.questionType,
+                        questionText = dto.questionText!!,
+                        options = listOf(
+                            dto.optionA!!,
+                            dto.optionB ?: "",
+                            dto.optionC ?: "",
+                            dto.optionD ?: ""
+                        ),
+                        difficulty = dto.difficulty
+                    )
+                }
             Resource.Success(questions)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to fetch questions")
@@ -202,6 +210,19 @@ class PracticeRepositoryImpl : PracticeRepository {
             Resource.Success(attempt)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to fetch latest attempt")
+        }
+    }
+
+    override suspend fun getStudentProfile(): Resource<StudentProfile> {
+        return try {
+            val dto = NetworkModule.arithmeticService.getStudentProfile()
+            Resource.Success(StudentProfile(
+                exists = dto.exists,
+                name = dto.name,
+                preferredLanguage = dto.preferredLanguage
+            ))
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to fetch student profile")
         }
     }
 }

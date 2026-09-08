@@ -1,52 +1,45 @@
-# Walkthrough - Login & Arithmetic API Integration
+# Walkthrough - Development Progress
 
-I have successfully implemented the Login flow using Supabase Auth and connected the Arithmetic Questions API to the practice session flow.
+This document tracks the incremental features implemented in the JNVST GURU app.
 
-## Changes Made
+## Completed Milestones
 
-### 1. Authentication Layer
-- **AuthRepository:** Created `AuthRepository` and `AuthRepositoryImpl` to handle Supabase Login, Session checking, and Logout.
-- **Login UI:** Built a modern `LoginScreen` with email/password inputs, loading indicators, and error handling.
-- **Session Management:** Updated the navigation graph to automatically redirect to `LoginScreen` if no session is active.
+### 1. Auth & Networking Foundation
+- **Supabase Auth:** Integrated Kotlin SDK for email/password login.
+- **Persistent Sessions:** App automatically starts on Home if a valid token exists.
+- **Auth Interceptor:** Retrofit automatically attaches `Bearer <JWT>` to all student-facing endpoints.
+- **Local Dev:** Configured `usesCleartextTraffic` for communication with the Spring Boot backend on localhost (127.0.0.1).
 
-### 2. Networking Layer
-- **ArithmeticApiService:** Defined the Retrofit interface for fetching questions from the Spring Boot backend.
-- **Auth Interceptor:** Implemented a global `authInterceptor` in `NetworkModule` that automatically attaches the Supabase JWT (`Authorization: Bearer <token>`) to every outgoing request.
-- **Error Handling:** Introduced a `Resource` wrapper for clean API state management (Loading, Success, Error).
+### 2. Practice Selection Flow
+- **Sequential UX:** Implemented a student-friendly picker: Subject -> Topic (Optional) -> Difficulty -> Set.
+- **Set Mapping:** "Set X" maps directly to backend pagination (Set 1 = page 0).
+- **Status Indicators:** `SetSelectionScreen` fetches data from the backend to mark sets as "Attempted".
 
-### 3. Practice Flow Integration
-- **Question Engine:** Updated `PracticeViewModel` to fetch a real 20-question set from the `/student/arithmetic-questions` endpoint.
-- **Mapping:** Implemented DTO-to-Domain mapping to transform backend data into the UI-safe `Question` model.
-- **Navigation Wiring:** Connected the "Start Practice" CTA to trigger real data fetching based on the selected topic/subject.
+### 3. Question Engine & Session UI
+- **Dynamic Content:** Fetches up to 20 questions from `GET /api/v1/student/arithmetic-questions`.
+- **Interaction:** Custom `OptionItem` for MCQ selection with local persistence during "Previous/Next" navigation.
+- **Review Mode:** Special UI decorator that highlights correct answers in Green and wrong selections in Red based on backend attempt data.
 
-### 4. Question Engine Implementation
-- **PracticeSessionScreen:** Implemented a new student-friendly practice UI that renders real questions from the backend.
-- **Dynamic Options:** The screen dynamically renders four text options (A, B, C, D) based on the backend response.
-- **Selection Persistence:** Selecting an option updates the domain model in the ViewModel, preserving choices during navigation.
-- **State Handling:** Integrated visual feedback for `Loading`, `Error`, and `Empty` question sets.
-- **Navigation:** Implemented "Previous" and "Next" logic with boundary checks (e.g., hiding Previous on the first question).
+### 4. Submission & Results
+- **API POST:** `PracticeViewModel` collects all selected indices and posts to `/api/v1/student/practice-attempts`.
+- **Truth Source:** The Result screen displays counts (`score`, `correctCount`, etc.) exclusively from the backend response.
+- **Actions:** Integrated "Review Answers" (jump to first question in Review Mode) and "Re-attempt" (fresh session reset).
 
-### 5. Practice Submission Integration (Phase 5)
-- **Submission Logic:** Implemented `submitAttempt()` in `PracticeViewModel` which collects all selections (including `null` for unanswered) and posts to the backend.
-- **Backend Sync:** Attached the real selection metadata (mode, subject, difficulty, page, topic) to the `POST /api/v1/student/practice-attempts` request.
-- **Result Screen:** Created `PracticeResultScreen` which acts as the source of truth by displaying stats directly from the backend response (`score`, `correctCount`, etc.).
-- **UI Flow:** The "Submit" button dynamically appears on the last question, triggering a loading state before navigating to the results.
+### 5. Multilingual & Profile Integration
+- **Profile Fetching:** App calls `/student-profiles/me` on startup to determine student preferences.
+- **Language Mapping:** Automatically translates profile codes (`bn`) to API parameters (`BENGALI`).
+- **Defaulting:** Safely defaults to `ENGLISH` if profile language is missing or invalid.
+
+---
 
 ## Verification Results
 
 ### Build & Run
-- Successfully built the application.
-- Verified that the `NetworkModule` correctly uses `10.0.2.2` for emulator-to-localhost communication.
+- Successfully built the application (Version 1.0.0-dev).
+- Verified API connectivity via `adb reverse`.
 
-### Login Flow
-1. App starts -> Checks Supabase session.
-2. If no session -> Show `LoginScreen`.
-3. Successful login -> Redirects to Home.
-
-### API Integration
-1. Navigate to Arithmetic -> Fractions -> Start Practice.
-2. The app calls `GET /api/v1/student/arithmetic-questions?questionType=FRACTION&difficulty=EASY&page=0&size=20`.
-3. The request includes the valid Supabase JWT in the headers.
-
-> [!TIP]
-> To test on a physical device, ensure you run `adb reverse tcp:8080 tcp:8080` and update `NetworkModule.BASE_URL` to `http://127.0.0.1:8080/`.
+### Key Flows Tested
+1. **Login:** Successfully redirected from Login to Home on fresh install.
+2. **Fresh Attempt:** Arithmetic -> Easy -> Set 1 -> Submit. Result counts correctly totaled to question size.
+3. **Review:** Tapped Review from Result. Navigated to Question 1 with correct/wrong icons visible.
+4. **Language:** Changed profile to `bn` in DB -> App correctly requested questions with `language=BENGALI`.

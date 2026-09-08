@@ -5,6 +5,7 @@ import com.jnvst.guru.data.network.dto.PageResponse
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptResponseDto
 import com.jnvst.guru.data.network.dto.PracticeStatusResponseDto
+import com.jnvst.guru.data.network.dto.StudentProfileDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -16,6 +17,7 @@ interface ArithmeticApiService {
     suspend fun getArithmeticQuestions(
         @Query("questionType") questionType: String?,
         @Query("difficulty") difficulty: String?,
+        @Query("language") language: String?,
         @Query("page") page: Int,
         @Query("size") size: Int
     ): PageResponse<ArithmeticQuestionDto>
@@ -41,4 +43,7 @@ interface ArithmeticApiService {
         @Query("difficulty") difficulty: String,
         @Query("page") page: Int
     ): PracticeAttemptResponseDto
+
+    @GET("/api/v1/student-profiles/me")
+    suspend fun getStudentProfile(): StudentProfileDto
 }

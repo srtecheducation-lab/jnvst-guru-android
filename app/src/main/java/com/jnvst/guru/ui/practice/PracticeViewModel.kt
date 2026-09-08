@@ -56,6 +56,9 @@ class PracticeViewModel(
     private val _submissionResult = MutableStateFlow<Resource<PracticeResult>?>(null)
     val submissionResult: StateFlow<Resource<PracticeResult>?> = _submissionResult.asStateFlow()
 
+    private val _studentProfile = MutableStateFlow<Resource<StudentProfile>?>(null)
+    val studentProfile: StateFlow<Resource<StudentProfile>?> = _studentProfile.asStateFlow()
+
     private var practiceMetadata: PracticeMetadata? = null
 
     private fun resetSessionState() {
@@ -68,6 +71,13 @@ class PracticeViewModel(
     init {
         loadSubjects()
         loadMockTests()
+        loadStudentProfile()
+    }
+
+    fun loadStudentProfile() {
+        viewModelScope.launch {
+            _studentProfile.value = repository.getStudentProfile()
+        }
     }
 
     fun startPractice(mode: String, subjectId: String, topicId: String?, difficulty: String, page: Int) {
@@ -84,9 +94,16 @@ class PracticeViewModel(
             
             practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
 
+            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+            val apiLanguage = when (languageCode.lowercase()) {
+                "bn" -> "BENGALI"
+                else -> "ENGLISH"
+            }
+
             val result = repository.getArithmeticQuestions(
                 type = type,
                 difficulty = difficulty,
+                language = apiLanguage,
                 page = page,
                 size = 20
             )
@@ -190,7 +207,13 @@ class PracticeViewModel(
             // Sync metadata
             practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
             
-            val qResult = repository.getArithmeticQuestions(type, difficulty, page, 20)
+            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+            val apiLanguage = when (languageCode.lowercase()) {
+                "bn" -> "BENGALI"
+                else -> "ENGLISH"
+            }
+
+            val qResult = repository.getArithmeticQuestions(type, difficulty, apiLanguage, page, 20)
             
             // 2. Load latest attempt if not already loaded or different
             if (_latestAttempt.value?.data == null) {

@@ -88,6 +88,7 @@ fun JnvstNavGraph(
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
+                    practiceViewModel.loadStudentProfile()
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
