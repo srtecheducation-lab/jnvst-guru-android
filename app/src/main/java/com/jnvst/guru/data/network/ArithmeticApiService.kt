@@ -1,6 +1,8 @@
 package com.jnvst.guru.data.network
 
 import com.jnvst.guru.data.network.dto.ArithmeticQuestionDto
+import com.jnvst.guru.data.network.dto.MatQuestionDto
+import com.jnvst.guru.data.network.dto.MatTopicDto
 import com.jnvst.guru.data.network.dto.PageResponse
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptResponseDto
@@ -21,6 +23,17 @@ interface ArithmeticApiService {
         @Query("page") page: Int,
         @Query("size") size: Int
     ): PageResponse<ArithmeticQuestionDto>
+
+    @GET("/api/v1/student/mat-topics")
+    suspend fun getMatTopics(): PageResponse<MatTopicDto>
+
+    @GET("/api/v1/student/mat-questions")
+    suspend fun getMatQuestions(
+        @Query("topicId") topicId: Long?,
+        @Query("difficulty") difficulty: String?,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): PageResponse<MatQuestionDto>
 
     @POST("/api/v1/student/practice-attempts")
     suspend fun submitPracticeAttempt(

@@ -41,7 +41,10 @@ fun TopicDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(topic?.let { stringResource(it.nameResId) } ?: "", fontWeight = FontWeight.Black) },
+                title = { 
+                    val title = topic?.nameOverride ?: (topic?.nameResId?.let { stringResource(it) } ?: "")
+                    Text(title, fontWeight = FontWeight.Black) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -82,8 +85,9 @@ fun TopicDetailScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
+                    val title = topic?.nameOverride ?: (topic?.nameResId?.let { stringResource(it) } ?: "")
                     Text(
-                        text = topic?.let { stringResource(it.nameResId) } ?: "",
+                        text = title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Black
                     )

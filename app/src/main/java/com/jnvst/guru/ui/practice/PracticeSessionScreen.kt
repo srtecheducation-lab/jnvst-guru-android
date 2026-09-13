@@ -3,6 +3,7 @@ package com.jnvst.guru.ui.practice
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -20,6 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.jnvst.guru.R
 import com.jnvst.guru.domain.model.Question
 import com.jnvst.guru.domain.util.Resource
@@ -178,17 +181,39 @@ fun QuestionContent(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = question.questionText,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-                lineHeight = 28.sp
-            )
+            
+            if (question.questionText.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = question.questionText,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 28.sp
+                )
+            }
         }
 
-        itemsIndexed(question.options) { optionIndex, optionText ->
+        if (!question.questionImageUrl.isNullOrEmpty()) {
+            item {
+                AsyncImage(
+                    model = question.questionImageUrl,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                )
+            }
+        }
+
+        val hasImageOptions = !question.optionImageUrls.isNullOrEmpty()
+        val optionsCount = if (hasImageOptions) question.optionImageUrls!!.size else question.options.size
+
+        items(optionsCount) { optionIndex ->
             val label = ('A' + optionIndex).toString()
+            val optionText = if (hasImageOptions) null else question.options[optionIndex]
+            val optionImageUrl = if (hasImageOptions) question.optionImageUrls!![optionIndex] else null
             
             val isSelected = question.selectedOptionIndex == optionIndex
             val isCorrect = question.correctOptionIndex == optionIndex
@@ -235,13 +260,23 @@ fun QuestionContent(
                         }
                     }
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(text = optionText, style = MaterialTheme.typography.bodyLarge)
+                    
+                    if (optionImageUrl != null) {
+                        AsyncImage(
+                            model = optionImageUrl,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .height(80.dp)
+                                .weight(1f),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                        )
+                    } else if (optionText != null) {
+                        Text(text = optionText, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    }
                     
                     if (isReviewMode && isCorrect) {
-                        Spacer(modifier = Modifier.weight(1f))
                         Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmerald)
                     } else if (isReviewMode && isSelected && !isCorrect) {
-                        Spacer(modifier = Modifier.weight(1f))
                         Icon(Icons.Default.Close, contentDescription = null, tint = Color.Red)
                     }
                 }

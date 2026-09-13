@@ -84,30 +84,41 @@ class PracticeViewModel(
         resetSessionState()
         _currentQuestionIndex.value = 0
         viewModelScope.launch {
-            val type = when(topicId) {
-                "analogy" -> "ANALOGY"
-                "number_system" -> "NUMBER_SYSTEM"
-                "fractions" -> "FRACTION"
-                "decimals" -> "DECIMAL"
-                else -> null
-            }
-            
-            practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
+            if (subjectId == "mat") {
+                practiceMetadata = PracticeMetadata(mode, subjectId, topicId, difficulty, page)
+                val result = repository.getMatQuestions(
+                    topicId = topicId?.toLongOrNull(),
+                    difficulty = difficulty,
+                    page = page,
+                    size = 20
+                )
+                _questions.value = result
+            } else {
+                val type = when(topicId) {
+                    "analogy" -> "ANALOGY"
+                    "number_system" -> "NUMBER_SYSTEM"
+                    "fractions" -> "FRACTION"
+                    "decimals" -> "DECIMAL"
+                    else -> null
+                }
+                
+                practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
 
-            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-            val apiLanguage = when (languageCode.lowercase()) {
-                "bn" -> "BENGALI"
-                else -> "ENGLISH"
-            }
+                val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+                val apiLanguage = when (languageCode.lowercase()) {
+                    "bn" -> "BENGALI"
+                    else -> "ENGLISH"
+                }
 
-            val result = repository.getArithmeticQuestions(
-                type = type,
-                difficulty = difficulty,
-                language = apiLanguage,
-                page = page,
-                size = 20
-            )
-            _questions.value = result
+                val result = repository.getArithmeticQuestions(
+                    type = type,
+                    difficulty = difficulty,
+                    language = apiLanguage,
+                    page = page,
+                    size = 20
+                )
+                _questions.value = result
+            }
         }
     }
 
@@ -160,12 +171,16 @@ class PracticeViewModel(
         resetSessionState() // Synchronously reset any stale data
         viewModelScope.launch {
             _setStatuses.value = Resource.Loading()
-            val type = when(topicId) {
-                "analogy" -> "ANALOGY"
-                "number_system" -> "NUMBER_SYSTEM"
-                "fractions" -> "FRACTION"
-                "decimals" -> "DECIMAL"
-                else -> null
+            val type = if (subjectId == "mat") {
+                topicId // For MAT, topicId is used as string if needed, or null
+            } else {
+                when(topicId) {
+                    "analogy" -> "ANALOGY"
+                    "number_system" -> "NUMBER_SYSTEM"
+                    "fractions" -> "FRACTION"
+                    "decimals" -> "DECIMAL"
+                    else -> null
+                }
             }
             _setStatuses.value = repository.getPracticeStatus(mode, subjectId, type, difficulty)
         }
@@ -177,12 +192,16 @@ class PracticeViewModel(
         _isReviewMode.value = false
         
         viewModelScope.launch {
-            val type = when(topicId) {
-                "analogy" -> "ANALOGY"
-                "number_system" -> "NUMBER_SYSTEM"
-                "fractions" -> "FRACTION"
-                "decimals" -> "DECIMAL"
-                else -> null
+            val type = if (subjectId == "mat") {
+                topicId
+            } else {
+                when(topicId) {
+                    "analogy" -> "ANALOGY"
+                    "number_system" -> "NUMBER_SYSTEM"
+                    "fractions" -> "FRACTION"
+                    "decimals" -> "DECIMAL"
+                    else -> null
+                }
             }
             _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, difficulty, page)
         }
@@ -196,24 +215,31 @@ class PracticeViewModel(
         
         viewModelScope.launch {
             // 1. Load questions first
-            val type = when(topicId) {
-                "analogy" -> "ANALOGY"
-                "number_system" -> "NUMBER_SYSTEM"
-                "fractions" -> "FRACTION"
-                "decimals" -> "DECIMAL"
-                else -> null
+            val type = if (subjectId == "mat") {
+                topicId
+            } else {
+                when(topicId) {
+                    "analogy" -> "ANALOGY"
+                    "number_system" -> "NUMBER_SYSTEM"
+                    "fractions" -> "FRACTION"
+                    "decimals" -> "DECIMAL"
+                    else -> null
+                }
             }
             
             // Sync metadata
             practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
             
-            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-            val apiLanguage = when (languageCode.lowercase()) {
-                "bn" -> "BENGALI"
-                else -> "ENGLISH"
+            val qResult = if (subjectId == "mat") {
+                repository.getMatQuestions(topicId?.toLongOrNull(), difficulty, page, 20)
+            } else {
+                val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+                val apiLanguage = when (languageCode.lowercase()) {
+                    "bn" -> "BENGALI"
+                    else -> "ENGLISH"
+                }
+                repository.getArithmeticQuestions(type, difficulty, apiLanguage, page, 20)
             }
-
-            val qResult = repository.getArithmeticQuestions(type, difficulty, apiLanguage, page, 20)
             
             // 2. Load latest attempt if not already loaded or different
             if (_latestAttempt.value?.data == null) {

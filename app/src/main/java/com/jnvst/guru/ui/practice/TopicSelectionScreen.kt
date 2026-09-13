@@ -207,8 +207,9 @@ fun TopicCard(
             Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
+                val title = topic.nameOverride ?: (topic.nameResId?.let { stringResource(it) } ?: "")
                 Text(
-                    text = stringResource(topic.nameResId),
+                    text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Black
                 )

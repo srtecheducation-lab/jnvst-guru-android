@@ -37,6 +37,8 @@
     <string name="nav_profile">Profile</string>
 
     <!-- Subjects -->
+    <string name="subject_mat">Mental Ability (MAT)</string>
+    <string name="subject_mat_desc">Strengthen your logical reasoning and thinking skills with images.</string>
     <string name="subject_mental_ability">Mental Ability</string>
     <string name="subject_mental_desc">Strengthen your logical reasoning and thinking skills.</string>
     <string name="subject_arithmetic">Arithmetic</string>

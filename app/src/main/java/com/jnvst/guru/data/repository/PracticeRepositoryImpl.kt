@@ -4,23 +4,25 @@ import com.jnvst.guru.R
 import com.jnvst.guru.data.network.NetworkModule
 import com.jnvst.guru.data.network.dto.AnswerRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
+import com.jnvst.guru.data.network.dto.MatQuestionDto
+import com.jnvst.guru.data.network.dto.MatTopicDto
 import com.jnvst.guru.domain.model.*
 import com.jnvst.guru.domain.repository.PracticeRepository
 import com.jnvst.guru.domain.util.Resource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 class PracticeRepositoryImpl : PracticeRepository {
 
     private val subjects = listOf(
-        // ... (existing subjects)
         Subject(
-            id = "mental_ability",
-            nameResId = R.string.subject_mental_ability,
-            descriptionResId = R.string.subject_mental_desc,
+            id = "mat",
+            nameResId = R.string.subject_mat,
+            descriptionResId = R.string.subject_mat_desc,
             iconResId = R.drawable.ic_launcher_foreground,
-            topicCount = 12,
-            colorHex = "#2196F3"
+            topicCount = 10,
+            colorHex = "#9C27B0"
         ),
         Subject(
             id = "arithmetic",
@@ -70,8 +72,29 @@ class PracticeRepositoryImpl : PracticeRepository {
 
     override fun getSubjects(): Flow<List<Subject>> = flowOf(subjects)
 
-    override fun getTopicsForSubject(subjectId: String): Flow<List<Topic>> = 
-        flowOf(topics[subjectId] ?: emptyList())
+    override fun getTopicsForSubject(subjectId: String): Flow<List<Topic>> = flow {
+        if (subjectId == "mat") {
+            try {
+                val response = NetworkModule.arithmeticService.getMatTopics()
+                val topics = response.content.sortedBy { it.sortOrder }.map { dto ->
+                    Topic(
+                        id = dto.id.toString(),
+                        subjectId = "mat",
+                        nameOverride = dto.name,
+                        descriptionResId = null,
+                        questionCount = dto.questionCount,
+                        durationMinutes = 30
+                    )
+                }
+                emit(topics)
+            } catch (e: Exception) {
+                android.util.Log.e("PracticeRepo", "Error fetching MAT topics", e)
+                emit(emptyList())
+            }
+        } else {
+            emit(topics[subjectId] ?: emptyList())
+        }
+    }
 
     override fun getSubjectById(subjectId: String): Flow<Subject?> = 
         flowOf(subjects.find { it.id == subjectId })
@@ -109,6 +132,52 @@ class PracticeRepositoryImpl : PracticeRepository {
             Resource.Success(questions)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to fetch questions")
+        }
+    }
+
+    override suspend fun getMatTopics(): Resource<List<Topic>> {
+        return try {
+            val response = NetworkModule.arithmeticService.getMatTopics()
+            val topics = response.content.sortedBy { it.sortOrder }.map { dto ->
+                Topic(
+                    id = dto.id.toString(),
+                    subjectId = "mat",
+                    nameOverride = dto.name,
+                    questionCount = dto.questionCount,
+                    durationMinutes = 30
+                )
+            }
+            Resource.Success(topics)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to fetch MAT topics")
+        }
+    }
+
+    override suspend fun getMatQuestions(
+        topicId: Long?,
+        difficulty: String?,
+        page: Int,
+        size: Int
+    ): Resource<List<Question>> {
+        return try {
+            val response = NetworkModule.arithmeticService.getMatQuestions(topicId, difficulty, page, size)
+            val questions = response.content.map { dto ->
+                Question(
+                    id = dto.id,
+                    questionType = "MAT",
+                    questionImageUrl = dto.questionImageUrl,
+                    optionImageUrls = listOf(
+                        dto.optionAImageUrl,
+                        dto.optionBImageUrl,
+                        dto.optionCImageUrl,
+                        dto.optionDImageUrl
+                    ),
+                    difficulty = dto.difficulty
+                )
+            }
+            Resource.Success(questions)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to fetch MAT questions")
         }
     }
 

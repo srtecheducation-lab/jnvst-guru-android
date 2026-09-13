@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.supabase.kt)
     implementation(libs.supabase.auth)
     implementation(libs.ktor.client.android)
+    implementation(libs.coil.compose)
     
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

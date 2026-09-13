@@ -19,6 +19,15 @@ interface PracticeRepository {
         size: Int
     ): Resource<List<Question>>
 
+    suspend fun getMatTopics(): Resource<List<Topic>>
+
+    suspend fun getMatQuestions(
+        topicId: Long?,
+        difficulty: String?,
+        page: Int,
+        size: Int
+    ): Resource<List<Question>>
+
     suspend fun submitPracticeAttempt(
         mode: String,
         subject: String,
