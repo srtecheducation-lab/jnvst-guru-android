@@ -45,6 +45,7 @@ interface ArithmeticApiService {
         @Query("practiceMode") practiceMode: String,
         @Query("subject") subject: String,
         @Query("topic") topic: String?,
+        @Query("topicId") topicId: Long?,
         @Query("difficulty") difficulty: String
     ): PracticeStatusResponseDto
 
@@ -53,6 +54,7 @@ interface ArithmeticApiService {
         @Query("practiceMode") practiceMode: String,
         @Query("subject") subject: String,
         @Query("topic") topic: String?,
+        @Query("topicId") topicId: Long?,
         @Query("difficulty") difficulty: String,
         @Query("page") page: Int
     ): PracticeAttemptResponseDto

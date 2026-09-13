@@ -32,6 +32,7 @@ interface PracticeRepository {
         mode: String,
         subject: String,
         topic: String?,
+        topicId: Long?,
         difficulty: String,
         page: Int,
         answers: List<Pair<Long, Int?>> // questionId to selectedOptionIndex
@@ -41,6 +42,7 @@ interface PracticeRepository {
         mode: String,
         subject: String,
         topic: String?,
+        topicId: Long?,
         difficulty: String
     ): Resource<List<SetStatus>>
 
@@ -48,6 +50,7 @@ interface PracticeRepository {
         mode: String,
         subject: String,
         topic: String?,
+        topicId: Long?,
         difficulty: String,
         page: Int
     ): Resource<PracticeAttempt>

@@ -21,7 +21,8 @@ data class PracticeAttemptResponseDto(
 
 @Serializable
 data class AnswerResponseDto(
-    val questionId: Long,
+    val questionId: Long? = null,
+    val matQuestionId: Long? = null,
     val selectedOption: String?,
     val correctOption: String?,
     val isCorrect: Boolean

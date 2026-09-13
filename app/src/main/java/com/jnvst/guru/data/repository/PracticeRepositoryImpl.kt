@@ -6,6 +6,7 @@ import com.jnvst.guru.data.network.dto.AnswerRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.MatQuestionDto
 import com.jnvst.guru.data.network.dto.MatTopicDto
+import com.jnvst.guru.data.network.util.MatImageUrlBuilder
 import com.jnvst.guru.domain.model.*
 import com.jnvst.guru.domain.repository.PracticeRepository
 import com.jnvst.guru.domain.util.Resource
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 class PracticeRepositoryImpl : PracticeRepository {
+
+    private var cachedMatTopics: List<Topic> = emptyList()
 
     private val subjects = listOf(
         Subject(
@@ -44,21 +47,21 @@ class PracticeRepositoryImpl : PracticeRepository {
 
     private val topics = mapOf(
         "mental_ability" to listOf(
-            Topic("analogy", "mental_ability", R.string.topic_analogy, questionCount = 20, progress = 85, durationMinutes = 30, difficultyResId = R.string.difficulty_medium),
-            Topic("classification", "mental_ability", R.string.topic_classification, questionCount = 25, progress = 72, durationMinutes = 35, difficultyResId = R.string.difficulty_hard),
-            Topic("figure_series", "mental_ability", R.string.topic_figure_series, questionCount = 30, progress = 54, durationMinutes = 40, difficultyResId = R.string.difficulty_easy),
-            Topic("direction_sense", "mental_ability", R.string.topic_grammar, questionCount = 15, progress = 91, durationMinutes = 20, difficultyResId = R.string.difficulty_medium), // Reusing grammar string for placeholder topic
-            Topic("mirror_images", "mental_ability", R.string.topic_grammar, questionCount = 20, progress = 68, durationMinutes = 25, difficultyResId = R.string.difficulty_hard)
+            Topic("analogy", "mental_ability", nameResId = R.string.topic_analogy, questionCount = 20, progress = 85, durationMinutes = 30, difficultyResId = R.string.difficulty_medium),
+            Topic("classification", "mental_ability", nameResId = R.string.topic_classification, questionCount = 25, progress = 72, durationMinutes = 35, difficultyResId = R.string.difficulty_hard),
+            Topic("figure_series", "mental_ability", nameResId = R.string.topic_figure_series, questionCount = 30, progress = 54, durationMinutes = 40, difficultyResId = R.string.difficulty_easy),
+            Topic("direction_sense", "mental_ability", nameResId = R.string.topic_grammar, questionCount = 15, progress = 91, durationMinutes = 20, difficultyResId = R.string.difficulty_medium),
+            Topic("mirror_images", "mental_ability", nameResId = R.string.topic_grammar, questionCount = 20, progress = 68, durationMinutes = 25, difficultyResId = R.string.difficulty_hard)
         ),
         "arithmetic" to listOf(
-            Topic("number_system", "arithmetic", R.string.topic_number_system, questionCount = 40, progress = 45, durationMinutes = 60, difficultyResId = R.string.difficulty_hard),
-            Topic("fractions", "arithmetic", R.string.topic_fractions, questionCount = 30, progress = 60, durationMinutes = 45, difficultyResId = R.string.difficulty_medium),
-            Topic("decimals", "arithmetic", R.string.topic_decimals, questionCount = 25, progress = 75, durationMinutes = 30, difficultyResId = R.string.difficulty_easy)
+            Topic("number_system", "arithmetic", nameResId = R.string.topic_number_system, questionCount = 40, progress = 45, durationMinutes = 60, difficultyResId = R.string.difficulty_hard),
+            Topic("fractions", "arithmetic", nameResId = R.string.topic_fractions, questionCount = 30, progress = 60, durationMinutes = 45, difficultyResId = R.string.difficulty_medium),
+            Topic("decimals", "arithmetic", nameResId = R.string.topic_decimals, questionCount = 25, progress = 75, durationMinutes = 30, difficultyResId = R.string.difficulty_easy)
         ),
         "language" to listOf(
-            Topic("reading_comp", "language", R.string.topic_reading_comprehension, questionCount = 10, progress = 30, durationMinutes = 20, difficultyResId = R.string.difficulty_medium),
-            Topic("vocabulary", "language", R.string.topic_vocabulary, questionCount = 50, progress = 20, durationMinutes = 40, difficultyResId = R.string.difficulty_easy),
-            Topic("grammar", "language", R.string.topic_grammar, questionCount = 100, progress = 10, durationMinutes = 90, difficultyResId = R.string.difficulty_hard)
+            Topic("reading_comp", "language", nameResId = R.string.topic_reading_comprehension, questionCount = 10, progress = 30, durationMinutes = 20, difficultyResId = R.string.difficulty_medium),
+            Topic("vocabulary", "language", nameResId = R.string.topic_vocabulary, questionCount = 50, progress = 20, durationMinutes = 40, difficultyResId = R.string.difficulty_easy),
+            Topic("grammar", "language", nameResId = R.string.topic_grammar, questionCount = 100, progress = 10, durationMinutes = 90, difficultyResId = R.string.difficulty_hard)
         )
     )
 
@@ -80,12 +83,14 @@ class PracticeRepositoryImpl : PracticeRepository {
                     Topic(
                         id = dto.id.toString(),
                         subjectId = "mat",
+                        code = dto.code,
                         nameOverride = dto.name,
-                        descriptionResId = null,
+                        descriptionOverride = dto.description,
                         questionCount = dto.questionCount,
                         durationMinutes = 30
                     )
                 }
+                cachedMatTopics = topics
                 emit(topics)
             } catch (e: Exception) {
                 android.util.Log.e("PracticeRepo", "Error fetching MAT topics", e)
@@ -142,11 +147,14 @@ class PracticeRepositoryImpl : PracticeRepository {
                 Topic(
                     id = dto.id.toString(),
                     subjectId = "mat",
+                    code = dto.code,
                     nameOverride = dto.name,
+                    descriptionOverride = dto.description,
                     questionCount = dto.questionCount,
                     durationMinutes = 30
                 )
             }
+            cachedMatTopics = topics
             Resource.Success(topics)
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to fetch MAT topics")
@@ -161,16 +169,18 @@ class PracticeRepositoryImpl : PracticeRepository {
     ): Resource<List<Question>> {
         return try {
             val response = NetworkModule.arithmeticService.getMatQuestions(topicId, difficulty, page, size)
+            val topicCode = cachedMatTopics.find { it.id == topicId?.toString() }?.code
             val questions = response.content.map { dto ->
                 Question(
                     id = dto.id,
                     questionType = "MAT",
-                    questionImageUrl = dto.questionImageUrl,
+                    topicCode = topicCode,
+                    questionImageUrl = MatImageUrlBuilder.buildUrl(dto.questionImageUrl),
                     optionImageUrls = listOf(
-                        dto.optionAImageUrl,
-                        dto.optionBImageUrl,
-                        dto.optionCImageUrl,
-                        dto.optionDImageUrl
+                        MatImageUrlBuilder.buildUrl(dto.optionAImageUrl) ?: "",
+                        MatImageUrlBuilder.buildUrl(dto.optionBImageUrl) ?: "",
+                        MatImageUrlBuilder.buildUrl(dto.optionCImageUrl) ?: "",
+                        MatImageUrlBuilder.buildUrl(dto.optionDImageUrl) ?: ""
                     ),
                     difficulty = dto.difficulty
                 )
@@ -185,6 +195,7 @@ class PracticeRepositoryImpl : PracticeRepository {
         mode: String,
         subject: String,
         topic: String?,
+        topicId: Long?,
         difficulty: String,
         page: Int,
         answers: List<Pair<Long, Int?>>
@@ -203,7 +214,8 @@ class PracticeRepositoryImpl : PracticeRepository {
             val request = PracticeAttemptRequestDto(
                 practiceMode = mode.uppercase(),
                 subject = subject.uppercase(),
-                topic = topic?.uppercase(),
+                topic = if (subject.lowercase() == "mat") null else topic?.uppercase(),
+                topicId = topicId,
                 difficulty = difficulty.uppercase(),
                 page = page,
                 answers = answerDtos
@@ -226,13 +238,15 @@ class PracticeRepositoryImpl : PracticeRepository {
         mode: String,
         subject: String,
         topic: String?,
+        topicId: Long?,
         difficulty: String
     ): Resource<List<SetStatus>> {
         return try {
             val response = NetworkModule.arithmeticService.getPracticeStatus(
                 practiceMode = mode.uppercase(),
                 subject = subject.uppercase(),
-                topic = topic?.uppercase(),
+                topic = if (subject.lowercase() == "mat") null else topic?.uppercase(),
+                topicId = topicId,
                 difficulty = difficulty.uppercase()
             )
             val sets = response.sets.map { dto ->
@@ -253,6 +267,7 @@ class PracticeRepositoryImpl : PracticeRepository {
         mode: String,
         subject: String,
         topic: String?,
+        topicId: Long?,
         difficulty: String,
         page: Int
     ): Resource<PracticeAttempt> {
@@ -260,7 +275,8 @@ class PracticeRepositoryImpl : PracticeRepository {
             val response = NetworkModule.arithmeticService.getLatestAttempt(
                 practiceMode = mode.uppercase(),
                 subject = subject.uppercase(),
-                topic = topic?.uppercase(),
+                topic = if (subject.lowercase() == "mat") null else topic?.uppercase(),
+                topicId = topicId,
                 difficulty = difficulty.uppercase(),
                 page = page
             )
@@ -273,7 +289,7 @@ class PracticeRepositoryImpl : PracticeRepository {
                 unansweredCount = response.unansweredCount,
                 submittedAt = response.submittedAt,
                 answers = response.answers.map {
-                    PracticeAnswer(it.questionId, it.selectedOption, it.correctOption, it.isCorrect)
+                    PracticeAnswer(it.questionId ?: it.matQuestionId ?: 0L, it.selectedOption, it.correctOption, it.isCorrect)
                 }
             )
             Resource.Success(attempt)

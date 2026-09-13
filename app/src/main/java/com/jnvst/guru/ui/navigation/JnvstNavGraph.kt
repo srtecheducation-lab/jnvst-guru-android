@@ -221,9 +221,10 @@ fun JnvstNavGraph(
                 viewModel = practiceViewModel,
                 onBackClick = { navController.popBackStack() },
                 onFinish = { 
+                    // Use the current session's metadata to ensure navigation uses correct params
                     val route = Screen.PracticeResult.route + 
                         "?mode=$mode&subjectId=$subjectId&difficulty=$difficulty&page=$page" + 
-                        (if (topicId != null) "&topicId=$topicId" else "")
+                        (if (topicId != null && topicId != "null") "&topicId=$topicId" else "")
                     navController.navigate(route) {
                         popUpTo(Screen.PracticeSession.route) { inclusive = true }
                     }

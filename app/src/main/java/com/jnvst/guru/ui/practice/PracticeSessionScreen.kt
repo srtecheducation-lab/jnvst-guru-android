@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.jnvst.guru.R
 import com.jnvst.guru.domain.model.Question
+import com.jnvst.guru.domain.model.Topic
 import com.jnvst.guru.domain.util.Resource
 import com.jnvst.guru.ui.theme.BrandEmerald
 
@@ -39,6 +40,7 @@ fun PracticeSessionScreen(
     val currentIndex by viewModel.currentQuestionIndex.collectAsState()
     val submissionResult by viewModel.submissionResult.collectAsState()
     val isReviewMode by viewModel.isReviewMode.collectAsState()
+    val currentTopic by viewModel.currentTopic.collectAsState()
 
     LaunchedEffect(submissionResult) {
         if (submissionResult is Resource.Success) {
@@ -150,6 +152,7 @@ fun PracticeSessionScreen(
                             index = currentIndex,
                             totalCount = questions.size,
                             isReviewMode = isReviewMode,
+                            currentTopic = currentTopic,
                             onOptionSelected = { viewModel.selectOption(it) }
                         )
                     }
@@ -165,8 +168,12 @@ fun QuestionContent(
     index: Int,
     totalCount: Int,
     isReviewMode: Boolean,
+    currentTopic: Topic?,
     onOptionSelected: (Int) -> Unit
 ) {
+    val topicName = currentTopic?.nameOverride ?: (currentTopic?.nameResId?.let { stringResource(it) } ?: "")
+    val topicDescription = currentTopic?.descriptionOverride ?: (currentTopic?.descriptionResId?.let { stringResource(it) } ?: "")
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -175,15 +182,38 @@ fun QuestionContent(
         contentPadding = PaddingValues(vertical = 24.dp)
     ) {
         item {
-            Text(
-                text = stringResource(R.string.label_question_counter, index + 1, totalCount),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.label_question_counter, index + 1, totalCount),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                if (topicName.isNotEmpty()) {
+                    Text(
+                        text = topicName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
             
+            if (topicDescription.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = topicDescription,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             if (question.questionText.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = question.questionText,
                     style = MaterialTheme.typography.titleLarge,
@@ -207,79 +237,176 @@ fun QuestionContent(
             }
         }
 
-        val hasImageOptions = !question.optionImageUrls.isNullOrEmpty()
-        val optionsCount = if (hasImageOptions) question.optionImageUrls!!.size else question.options.size
-
-        items(optionsCount) { optionIndex ->
-            val label = ('A' + optionIndex).toString()
-            val optionText = if (hasImageOptions) null else question.options[optionIndex]
-            val optionImageUrl = if (hasImageOptions) question.optionImageUrls!![optionIndex] else null
-            
-            val isSelected = question.selectedOptionIndex == optionIndex
-            val isCorrect = question.correctOptionIndex == optionIndex
-            
-            val optionColor = when {
-                isReviewMode && isCorrect -> BrandEmerald
-                isReviewMode && isSelected && !isCorrect -> Color.Red
-                isSelected -> MaterialTheme.colorScheme.primary
-                else -> Color.LightGray.copy(alpha = 0.5f)
-            }
-            
-            val bgColor = when {
-                isReviewMode && isCorrect -> BrandEmerald.copy(alpha = 0.1f)
-                isReviewMode && isSelected && !isCorrect -> Color.Red.copy(alpha = 0.1f)
-                isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                else -> MaterialTheme.colorScheme.surface
-            }
-
-            Surface(
-                onClick = { if (!isReviewMode) onOptionSelected(optionIndex) },
-                shape = RoundedCornerShape(16.dp),
-                color = bgColor,
-                border = androidx.compose.foundation.BorderStroke(
-                    width = if (isSelected || (isReviewMode && isCorrect)) 2.dp else 1.dp,
-                    color = optionColor
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        shape = androidx.compose.foundation.shape.CircleShape,
-                        color = if (isSelected || (isReviewMode && isCorrect)) optionColor else Color.LightGray.copy(alpha = 0.2f),
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = label,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected || (isReviewMode && isCorrect)) Color.White else Color.Black
-                            )
-                        }
+        if (question.topicCode == "ODD_ONE_OUT" && !question.optionImageUrls.isNullOrEmpty()) {
+            // 2x2 Grid for ODD_ONE_OUT
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        MatOptionCard(0, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
+                        MatOptionCard(1, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    if (optionImageUrl != null) {
-                        AsyncImage(
-                            model = optionImageUrl,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .height(80.dp)
-                                .weight(1f),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Fit
-                        )
-                    } else if (optionText != null) {
-                        Text(text = optionText, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                    }
-                    
-                    if (isReviewMode && isCorrect) {
-                        Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmerald)
-                    } else if (isReviewMode && isSelected && !isCorrect) {
-                        Icon(Icons.Default.Close, contentDescription = null, tint = Color.Red)
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        MatOptionCard(2, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
+                        MatOptionCard(3, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
                     }
                 }
+            }
+        } else {
+            // Default List Layout
+            val hasImageOptions = !question.optionImageUrls.isNullOrEmpty()
+            val optionsCount = if (hasImageOptions) question.optionImageUrls!!.size else question.options.size
+
+            items(optionsCount) { optionIndex ->
+                val label = ('A' + optionIndex).toString()
+                val optionText = if (hasImageOptions) null else question.options[optionIndex]
+                val optionImageUrl = if (hasImageOptions) question.optionImageUrls!![optionIndex] else null
+                
+                val isSelected = question.selectedOptionIndex == optionIndex
+                val isCorrect = question.correctOptionIndex == optionIndex
+                
+                val optionColor = when {
+                    isReviewMode && isCorrect -> BrandEmerald
+                    isReviewMode && isSelected && !isCorrect -> Color.Red
+                    isSelected -> MaterialTheme.colorScheme.primary
+                    else -> Color.LightGray.copy(alpha = 0.5f)
+                }
+                
+                val bgColor = when {
+                    isReviewMode && isCorrect -> BrandEmerald.copy(alpha = 0.1f)
+                    isReviewMode && isSelected && !isCorrect -> Color.Red.copy(alpha = 0.1f)
+                    isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    else -> MaterialTheme.colorScheme.surface
+                }
+
+                Surface(
+                    onClick = { if (!isReviewMode) onOptionSelected(optionIndex) },
+                    shape = RoundedCornerShape(16.dp),
+                    color = bgColor,
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = if (isSelected || (isReviewMode && isCorrect)) 2.dp else 1.dp,
+                        color = optionColor
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = if (isSelected || (isReviewMode && isCorrect)) optionColor else Color.LightGray.copy(alpha = 0.2f),
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = label,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected || (isReviewMode && isCorrect)) Color.White else Color.Black
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        if (optionImageUrl != null) {
+                            AsyncImage(
+                                model = optionImageUrl,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .height(80.dp)
+                                    .weight(1f),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                            )
+                        } else if (optionText != null) {
+                            Text(text = optionText, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                        }
+                        
+                        if (isReviewMode && isCorrect) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = BrandEmerald)
+                        } else if (isReviewMode && isSelected && !isCorrect) {
+                            Icon(Icons.Default.Close, contentDescription = null, tint = Color.Red)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MatOptionCard(
+    optionIndex: Int,
+    question: Question,
+    isReviewMode: Boolean,
+    onOptionSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val label = ('A' + optionIndex).toString()
+    val optionImageUrl = question.optionImageUrls?.getOrNull(optionIndex) ?: ""
+    
+    val isSelected = question.selectedOptionIndex == optionIndex
+    val isCorrect = question.correctOptionIndex == optionIndex
+    
+    val optionColor = when {
+        isReviewMode && isCorrect -> BrandEmerald
+        isReviewMode && isSelected && !isCorrect -> Color.Red
+        isSelected -> MaterialTheme.colorScheme.primary
+        else -> Color.LightGray.copy(alpha = 0.5f)
+    }
+    
+    val bgColor = when {
+        isReviewMode && isCorrect -> BrandEmerald.copy(alpha = 0.1f)
+        isReviewMode && isSelected && !isCorrect -> Color.Red.copy(alpha = 0.1f)
+        isSelected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        else -> MaterialTheme.colorScheme.surface
+    }
+
+    Surface(
+        onClick = { if (!isReviewMode) onOptionSelected(optionIndex) },
+        shape = RoundedCornerShape(16.dp),
+        color = bgColor,
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (isSelected || (isReviewMode && isCorrect)) 2.dp else 1.dp,
+            color = optionColor
+        ),
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Surface(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = if (isSelected || (isReviewMode && isCorrect)) optionColor else Color.LightGray.copy(alpha = 0.2f),
+                modifier = Modifier.size(28.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = label,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected || (isReviewMode && isCorrect)) Color.White else Color.Black,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            AsyncImage(
+                model = optionImageUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+            )
+            
+            if (isReviewMode && (isCorrect || (isSelected && !isCorrect))) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Icon(
+                    imageVector = if (isCorrect) Icons.Default.Check else Icons.Default.Close,
+                    contentDescription = null,
+                    tint = if (isCorrect) BrandEmerald else Color.Red,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }

@@ -10,9 +10,10 @@ To provide a high-quality, structured, and accessible digital learning environme
 ## 2. Current Scope (Class 6)
 - **Home:** Personalized dashboard with quick access to recent activities and progress summaries.
 - **Practice:** 
-    - **Subject-wise:** Mental Ability, Arithmetic, and Language.
-    - **Topic-wise:** Granular practice for specific concepts within subjects.
-    - **Selection Flow:** Home -> Subject -> Difficulty (Easy/Med/Hard) -> Set (20 questions each).
+    - **Arithmetic:** Master numbers, calculations, and logic.
+    - **Mental Ability (MAT):** Image-based logical reasoning with topic-specific layouts (e.g., Odd One Out).
+    - **Language:** Improve reading and vocabulary skills (Future).
+    - **Selection Flow:** Home -> Subject -> Topic (Optional) -> Difficulty -> Set (20 questions each).
 - **Previous Year Questions (PYQs):** Authentic question papers from past exams for realistic practice.
 - **Mock Tests:** Full-length timed tests to simulate the actual exam environment.
 - **Progress:** Detailed analytics and performance tracking to identify strengths and weaknesses.
@@ -29,11 +30,10 @@ To provide a high-quality, structured, and accessible digital learning environme
 - **Language:** Kotlin
 - **UI:** Jetpack Compose with Material 3.
 - **Concurrency:** Kotlin Coroutines and Flow for reactive data streams.
-- **Dependency Injection:** Hilt (Future).
-- **Persistence:** Room Database (Future local caching).
+- **Image Loading:** Coil (for MAT image-based questions).
 - **Networking:** Retrofit + OkHttp.
 - **Auth:** Supabase Auth (Kotlin Client).
-- **Navigation:** Jetpack Compose Navigation (Type-safe query params).
+- **Navigation:** Jetpack Compose Navigation (Type-safe with complex query params).
 
 ## 5. Backend Tech Stack
 - **Language:** Java
@@ -44,6 +44,7 @@ To provide a high-quality, structured, and accessible digital learning environme
 ## 6. UI/UX Principles
 - **Material 3:** Strict adherence to Material Design 3 guidelines.
 - **Class 6 Friendly:** Minimalist, high-contrast, large touch targets, and student-centric wording.
+- **Topic-Specific Layouts:** Custom rendering for different question types (e.g., 2x2 grid for MAT Odd One Out).
 - **Dynamic Feedback:** Real-time selection indicators and visual review modes (Green/Red) for answers.
 
 ## 7. Multilingual Strategy
@@ -58,9 +59,10 @@ To provide a high-quality, structured, and accessible digital learning environme
 - **Phase 4:** Submission & Result Analytics.
 - **Phase 5:** Review Mode & Set Status Persistence.
 - **Phase 6:** Language Support & Profile Integration.
+- **Phase 7:** MAT Integration & Image-based Layouts.
 
 ## 9. Navigation Structure
 - **Root:** `LoginScreen` (if no session) or `HomeScreen`.
-- **Practice Session:** `PracticeSessionScreen` handles both fresh attempts and Review Mode.
+- **Practice Session:** `PracticeSessionScreen` handles fresh attempts and Review Mode.
 - **Results:** `PracticeResultScreen` displays backend stats and provides Review/Re-attempt actions.
 - **Type-Safety:** Route arguments include `mode`, `subjectId`, `topicId`, `difficulty`, and `page`.

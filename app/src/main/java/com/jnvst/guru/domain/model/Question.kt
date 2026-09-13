@@ -3,6 +3,7 @@ package com.jnvst.guru.domain.model
 data class Question(
     val id: Long,
     val questionType: String,
+    val topicCode: String? = null,
     val questionText: String = "",
     val questionImageUrl: String? = null,
     val options: List<String> = emptyList(),

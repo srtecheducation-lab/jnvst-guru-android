@@ -7,6 +7,7 @@ data class PracticeAttemptRequestDto(
     val practiceMode: String,
     val subject: String,
     val topic: String?,
+    val topicId: Long? = null,
     val difficulty: String,
     val page: Int,
     val answers: List<AnswerRequestDto>

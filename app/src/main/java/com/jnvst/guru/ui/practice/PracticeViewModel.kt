@@ -59,6 +59,11 @@ class PracticeViewModel(
     private val _studentProfile = MutableStateFlow<Resource<StudentProfile>?>(null)
     val studentProfile: StateFlow<Resource<StudentProfile>?> = _studentProfile.asStateFlow()
 
+    private val _currentTopic = MutableStateFlow<Topic?>(null)
+    val currentTopic: StateFlow<Topic?> = _currentTopic.asStateFlow()
+
+    private var matTopics: List<Topic> = emptyList()
+
     private var practiceMetadata: PracticeMetadata? = null
 
     private fun resetSessionState() {
@@ -66,6 +71,7 @@ class PracticeViewModel(
         _submissionResult.value = null
         _latestAttempt.value = null
         _isReviewMode.value = false
+        _currentTopic.value = null
     }
 
     init {
@@ -85,6 +91,7 @@ class PracticeViewModel(
         _currentQuestionIndex.value = 0
         viewModelScope.launch {
             if (subjectId == "mat") {
+                _currentTopic.value = matTopics.find { it.id == topicId }
                 practiceMetadata = PracticeMetadata(mode, subjectId, topicId, difficulty, page)
                 val result = repository.getMatQuestions(
                     topicId = topicId?.toLongOrNull(),
@@ -102,6 +109,7 @@ class PracticeViewModel(
                     else -> null
                 }
                 
+                _currentTopic.value = _topics.value.find { it.id == topicId }
                 practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
 
                 val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
@@ -155,10 +163,17 @@ class PracticeViewModel(
                 it.id to if (it.selectedOptionIndex == -1) null else it.selectedOptionIndex 
             }
 
+            val (topic, tId) = if (metadata.subjectId.equals("mat", ignoreCase = true)) {
+                null to metadata.topicType?.toLongOrNull()
+            } else {
+                metadata.topicType to null
+            }
+
             val result = repository.submitPracticeAttempt(
                 mode = metadata.mode,
                 subject = metadata.subjectId,
-                topic = metadata.topicType,
+                topic = topic,
+                topicId = tId,
                 difficulty = metadata.difficulty,
                 page = metadata.page,
                 answers = answers
@@ -171,18 +186,19 @@ class PracticeViewModel(
         resetSessionState() // Synchronously reset any stale data
         viewModelScope.launch {
             _setStatuses.value = Resource.Loading()
-            val type = if (subjectId == "mat") {
-                topicId // For MAT, topicId is used as string if needed, or null
+            val (type, tId) = if (subjectId == "mat") {
+                null to topicId?.toLongOrNull()
             } else {
-                when(topicId) {
+                val type = when(topicId) {
                     "analogy" -> "ANALOGY"
                     "number_system" -> "NUMBER_SYSTEM"
                     "fractions" -> "FRACTION"
                     "decimals" -> "DECIMAL"
                     else -> null
                 }
+                type to null
             }
-            _setStatuses.value = repository.getPracticeStatus(mode, subjectId, type, difficulty)
+            _setStatuses.value = repository.getPracticeStatus(mode, subjectId, type, tId, difficulty)
         }
     }
 
@@ -192,18 +208,19 @@ class PracticeViewModel(
         _isReviewMode.value = false
         
         viewModelScope.launch {
-            val type = if (subjectId == "mat") {
-                topicId
+            val (type, tId) = if (subjectId == "mat") {
+                null to topicId?.toLongOrNull()
             } else {
-                when(topicId) {
+                val type = when(topicId) {
                     "analogy" -> "ANALOGY"
                     "number_system" -> "NUMBER_SYSTEM"
                     "fractions" -> "FRACTION"
                     "decimals" -> "DECIMAL"
                     else -> null
                 }
+                type to null
             }
-            _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, difficulty, page)
+            _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, page)
         }
     }
 
@@ -243,7 +260,8 @@ class PracticeViewModel(
             
             // 2. Load latest attempt if not already loaded or different
             if (_latestAttempt.value?.data == null) {
-                _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, difficulty, page)
+                val tId = if (subjectId == "mat") topicId?.toLongOrNull() else null
+                _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, page)
             }
             
             val attempt = _latestAttempt.value?.data
@@ -295,6 +313,9 @@ class PracticeViewModel(
         viewModelScope.launch {
             repository.getTopicsForSubject(subjectId).collect {
                 _topics.value = it
+                if (subjectId == "mat") {
+                    matTopics = it
+                }
             }
             repository.getSubjectById(subjectId).collect {
                 _selectedSubject.value = it

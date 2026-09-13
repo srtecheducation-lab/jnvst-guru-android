@@ -18,6 +18,11 @@
     - [x] Student Profile API Integration
     - [x] Mapping (en -> ENGLISH, bn -> BENGALI)
     - [x] Dynamic language parameter in Arithmetic API
-- [ ] Phase 7: Local Persistence & Offline Mode
-- [ ] Phase 8: Mock Test & PYQ Engines
-- [ ] Phase 9: Detailed Analytics & Performance Charts
+- [x] Phase 7: MAT Integration & Image Layouts
+    - [x] Dynamic MAT topic loading from API
+    - [x] Image-based question support using Coil
+    - [x] Dedicated 2x2 grid layout for `ODD_ONE_OUT`
+    - [x] Public Supabase Image URL building
+- [ ] Phase 8: Local Persistence & Offline Mode
+- [ ] Phase 9: Mock Test & PYQ Engines
+- [ ] Phase 10: Detailed Analytics & Performance Charts
