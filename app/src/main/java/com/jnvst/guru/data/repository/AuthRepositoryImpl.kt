@@ -30,6 +30,18 @@ class AuthRepositoryImpl : AuthRepository {
         }
     }
 
+    override suspend fun signUp(email: String, password: String): Result<Unit> {
+        return try {
+            SupabaseClient.client.auth.signUpWith(Email) {
+                this.email = email
+                this.password = password
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun logout() {
         try {
             SupabaseClient.client.auth.signOut()

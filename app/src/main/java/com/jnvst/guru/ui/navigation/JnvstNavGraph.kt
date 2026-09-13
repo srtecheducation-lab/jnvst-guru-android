@@ -19,6 +19,8 @@ import com.jnvst.guru.ui.practice.SetSelectionScreen
 import com.jnvst.guru.ui.home.HomeScreen
 import com.jnvst.guru.ui.auth.LoginScreen
 import com.jnvst.guru.ui.auth.LoginViewModel
+import com.jnvst.guru.ui.auth.SignupScreen
+import com.jnvst.guru.ui.auth.SignupViewModel
 import com.jnvst.guru.ui.practice.*
 import com.jnvst.guru.ui.tests.*
 import com.jnvst.guru.ui.progress.*
@@ -76,6 +78,7 @@ sealed class Screen(val route: String) {
     // Profile
     object Profile : Screen("profile")
     object Login : Screen("login")
+    object Signup : Screen("signup")
 }
 
 @Composable
@@ -105,7 +108,21 @@ fun JnvstNavGraph(
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
+                onCreateAccountClick = {
+                    navController.navigate(Screen.Signup.route)
+                },
                 viewModel = loginViewModel
+            )
+        }
+
+        composable(Screen.Signup.route) {
+            SignupScreen(
+                onSignupSuccess = {
+                    navController.popBackStack()
+                },
+                onBackToLogin = {
+                    navController.popBackStack()
+                }
             )
         }
 
@@ -389,9 +406,12 @@ fun JnvstNavGraph(
         // Profile
         composable(Screen.Profile.route) {
             ProfileScreen(
+                onLogout = {
+                    loginViewModel.logout()
+                },
                 onBackClick = { navController.popBackStack() }
             )
         }
-        }
     }
+}
 }

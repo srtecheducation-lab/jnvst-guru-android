@@ -60,4 +60,10 @@ class LoginViewModel(
     fun checkSession(): Boolean {
         return authRepository.isLoggedIn()
     }
+
+    fun logout() {
+        viewModelScope.launch {
+            authRepository.logout()
+        }
+    }
 }

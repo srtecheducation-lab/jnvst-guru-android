@@ -169,6 +169,15 @@
     <string name="label_password">Password</string>
     <string name="btn_login">Login</string>
     <string name="error_empty_fields">Email and password cannot be empty</string>
+    <string name="signup_title">Create Account</string>
+    <string name="signup_subtitle">Join JNVST GURU today</string>
+    <string name="label_confirm_password">Confirm Password</string>
+    <string name="btn_signup">Sign Up</string>
+    <string name="msg_have_account">Already have an account? Login</string>
+    <string name="msg_no_account">Don\'t have an account? Create one</string>
+    <string name="msg_signup_success">Account created! Please check your email to verify your account before logging in.</string>
+    <string name="btn_back_to_login">Back to Login</string>
+    <string name="label_logout">Logout</string>
 
     <!-- Selection Screens -->
     <string name="title_practice_mode">Practice</string>

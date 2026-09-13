@@ -19,6 +19,7 @@ import com.jnvst.guru.ui.theme.BrandIndigo
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onCreateAccountClick: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -103,6 +104,12 @@ fun LoginScreen(
                     fontSize = 18.sp
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onCreateAccountClick) {
+            Text(text = stringResource(R.string.msg_no_account))
         }
     }
 }

@@ -26,6 +26,7 @@ import com.jnvst.guru.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
+    onLogout: () -> Unit,
     onBackClick: () -> Unit
 ) {
     Column(
@@ -58,6 +59,25 @@ fun ProfileScreen(
                     ProfileMenuButton(Icons.Default.BookmarkBorder, stringResource(R.string.label_bookmarks))
                     ProfileMenuButton(Icons.Default.FileDownload, stringResource(R.string.label_downloads))
                     ProfileMenuButton(Icons.Default.Settings, stringResource(R.string.label_settings))
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Surface(
+                        onClick = onLogout,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = null, tint = Color.Red, modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(text = stringResource(R.string.label_logout), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = Color.Red, modifier = Modifier.weight(1f))
+                            Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color.LightGray)
+                        }
+                    }
                 }
             }
         }
