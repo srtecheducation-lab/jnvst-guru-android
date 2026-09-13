@@ -40,7 +40,7 @@ fun PracticeSessionScreen(
     val currentIndex by viewModel.currentQuestionIndex.collectAsState()
     val submissionResult by viewModel.submissionResult.collectAsState()
     val isReviewMode by viewModel.isReviewMode.collectAsState()
-    val currentTopic by viewModel.currentTopic.collectAsState()
+    val matTopicsMetadata by viewModel.matTopicsMetadata.collectAsState()
 
     LaunchedEffect(submissionResult) {
         if (submissionResult is Resource.Success) {
@@ -152,7 +152,7 @@ fun PracticeSessionScreen(
                             index = currentIndex,
                             totalCount = questions.size,
                             isReviewMode = isReviewMode,
-                            currentTopic = currentTopic,
+                            matTopicsMetadata = matTopicsMetadata,
                             onOptionSelected = { viewModel.selectOption(it) }
                         )
                     }
@@ -168,9 +168,18 @@ fun QuestionContent(
     index: Int,
     totalCount: Int,
     isReviewMode: Boolean,
-    currentTopic: Topic?,
+    matTopicsMetadata: List<Topic>,
     onOptionSelected: (Int) -> Unit
 ) {
+    // Look up topic metadata based on topicCode (for MAT) or questionType (for Arithmetic)
+    // For MAT Subject-wise, we might need to look up by topicCode or id if available.
+    // The current Question model has topicCode.
+    val currentTopic = if (question.questionType == "MAT") {
+        matTopicsMetadata.find { it.code == question.topicCode }
+    } else {
+        null
+    }
+
     val topicName = currentTopic?.nameOverride ?: (currentTopic?.nameResId?.let { stringResource(it) } ?: "")
     val topicDescription = currentTopic?.descriptionOverride ?: (currentTopic?.descriptionResId?.let { stringResource(it) } ?: "")
 
@@ -182,33 +191,33 @@ fun QuestionContent(
         contentPadding = PaddingValues(vertical = 24.dp)
     ) {
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                if (topicName.isNotEmpty()) {
+                    Text(
+                        text = topicName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                if (topicDescription.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = topicDescription,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 20.sp
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 Text(
                     text = stringResource(R.string.label_question_counter, index + 1, totalCount),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                
-                if (topicName.isNotEmpty()) {
-                    Text(
-                        text = topicName,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            }
-            
-            if (topicDescription.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = topicDescription,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
 
@@ -240,12 +249,21 @@ fun QuestionContent(
         if (question.topicCode == "ODD_ONE_OUT" && !question.optionImageUrls.isNullOrEmpty()) {
             // 2x2 Grid for ODD_ONE_OUT
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
                         MatOptionCard(0, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
                         MatOptionCard(1, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
                         MatOptionCard(2, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
                         MatOptionCard(3, question, isReviewMode, onOptionSelected, Modifier.weight(1f))
                     }

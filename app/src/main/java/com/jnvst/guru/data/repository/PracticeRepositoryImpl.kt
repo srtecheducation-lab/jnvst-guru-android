@@ -168,9 +168,24 @@ class PracticeRepositoryImpl : PracticeRepository {
         size: Int
     ): Resource<List<Question>> {
         return try {
+            // Ensure MAT topics are cached for ID -> Code mapping
+            if (cachedMatTopics.isEmpty()) {
+                val response = NetworkModule.arithmeticService.getMatTopics()
+                cachedMatTopics = response.content.map { dto ->
+                    Topic(
+                        id = dto.id.toString(),
+                        subjectId = "mat",
+                        code = dto.code,
+                        nameOverride = dto.name,
+                        descriptionOverride = dto.description,
+                        questionCount = dto.questionCount
+                    )
+                }
+            }
+
             val response = NetworkModule.arithmeticService.getMatQuestions(topicId, difficulty, page, size)
-            val topicCode = cachedMatTopics.find { it.id == topicId?.toString() }?.code
             val questions = response.content.map { dto ->
+                val topicCode = cachedMatTopics.find { it.id == dto.topicId.toString() }?.code
                 Question(
                     id = dto.id,
                     questionType = "MAT",

@@ -59,10 +59,11 @@ class PracticeViewModel(
     private val _studentProfile = MutableStateFlow<Resource<StudentProfile>?>(null)
     val studentProfile: StateFlow<Resource<StudentProfile>?> = _studentProfile.asStateFlow()
 
+    private val _matTopicsMetadata = MutableStateFlow<List<Topic>>(emptyList())
+    val matTopicsMetadata: StateFlow<List<Topic>> = _matTopicsMetadata.asStateFlow()
+
     private val _currentTopic = MutableStateFlow<Topic?>(null)
     val currentTopic: StateFlow<Topic?> = _currentTopic.asStateFlow()
-
-    private var matTopics: List<Topic> = emptyList()
 
     private var practiceMetadata: PracticeMetadata? = null
 
@@ -78,6 +79,15 @@ class PracticeViewModel(
         loadSubjects()
         loadMockTests()
         loadStudentProfile()
+        loadMatTopicsMetadata()
+    }
+
+    private fun loadMatTopicsMetadata() {
+        viewModelScope.launch {
+            repository.getTopicsForSubject("mat").collect {
+                _matTopicsMetadata.value = it
+            }
+        }
     }
 
     fun loadStudentProfile() {
@@ -90,8 +100,14 @@ class PracticeViewModel(
         resetSessionState()
         _currentQuestionIndex.value = 0
         viewModelScope.launch {
-            if (subjectId == "mat") {
-                _currentTopic.value = matTopics.find { it.id == topicId }
+            if (subjectId.equals("mat", ignoreCase = true)) {
+                // Ensure metadata is loaded if it's the first time
+                if (_matTopicsMetadata.value.isEmpty()) {
+                    repository.getTopicsForSubject("mat").collect {
+                        _matTopicsMetadata.value = it
+                    }
+                }
+                _currentTopic.value = _matTopicsMetadata.value.find { it.id == topicId }
                 practiceMetadata = PracticeMetadata(mode, subjectId, topicId, difficulty, page)
                 val result = repository.getMatQuestions(
                     topicId = topicId?.toLongOrNull(),
@@ -208,7 +224,7 @@ class PracticeViewModel(
         _isReviewMode.value = false
         
         viewModelScope.launch {
-            val (type, tId) = if (subjectId == "mat") {
+            val (type, tId) = if (subjectId.equals("mat", ignoreCase = true)) {
                 null to topicId?.toLongOrNull()
             } else {
                 val type = when(topicId) {
@@ -231,8 +247,15 @@ class PracticeViewModel(
         _currentQuestionIndex.value = 0
         
         viewModelScope.launch {
+            // Ensure metadata is loaded for MAT
+            if (subjectId.equals("mat", ignoreCase = true) && _matTopicsMetadata.value.isEmpty()) {
+                repository.getTopicsForSubject("mat").collect {
+                    _matTopicsMetadata.value = it
+                }
+            }
+
             // 1. Load questions first
-            val type = if (subjectId == "mat") {
+            val type = if (subjectId.equals("mat", ignoreCase = true)) {
                 topicId
             } else {
                 when(topicId) {
@@ -247,7 +270,7 @@ class PracticeViewModel(
             // Sync metadata
             practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
             
-            val qResult = if (subjectId == "mat") {
+            val qResult = if (subjectId.equals("mat", ignoreCase = true)) {
                 repository.getMatQuestions(topicId?.toLongOrNull(), difficulty, page, 20)
             } else {
                 val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
@@ -260,7 +283,7 @@ class PracticeViewModel(
             
             // 2. Load latest attempt if not already loaded or different
             if (_latestAttempt.value?.data == null) {
-                val tId = if (subjectId == "mat") topicId?.toLongOrNull() else null
+                val tId = if (subjectId.equals("mat", ignoreCase = true)) topicId?.toLongOrNull() else null
                 _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, page)
             }
             
@@ -313,8 +336,8 @@ class PracticeViewModel(
         viewModelScope.launch {
             repository.getTopicsForSubject(subjectId).collect {
                 _topics.value = it
-                if (subjectId == "mat") {
-                    matTopics = it
+                if (subjectId.equals("mat", ignoreCase = true)) {
+                    _matTopicsMetadata.value = it
                 }
             }
             repository.getSubjectById(subjectId).collect {
