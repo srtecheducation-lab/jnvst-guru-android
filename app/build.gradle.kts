@@ -72,6 +72,7 @@ dependencies {
     // Supabase
     implementation(libs.supabase.kt)
     implementation(libs.supabase.auth)
+    implementation(libs.supabase.auth.compose)
     implementation(libs.ktor.client.android)
     implementation(libs.coil.compose)
     

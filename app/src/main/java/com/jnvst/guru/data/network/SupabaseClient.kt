@@ -4,13 +4,16 @@ import com.jnvst.guru.BuildConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.SettingsSessionManager
 
 object SupabaseClient {
     val client = createSupabaseClient(
         supabaseUrl = BuildConfig.SUPABASE_URL,
         supabaseKey = BuildConfig.SUPABASE_KEY
     ) {
-        install(Auth)
+        install(Auth) {
+            sessionManager = SettingsSessionManager()
+        }
     }
 
     /**

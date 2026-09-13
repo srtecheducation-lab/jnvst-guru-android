@@ -17,6 +17,17 @@ class LoginViewModel(
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            authRepository.sessionStatus.collect { isAuthenticated ->
+                _uiState.update { it.copy(
+                    isInitializing = false,
+                    isLoginSuccessful = isAuthenticated
+                ) }
+            }
+        }
+    }
+
     fun onEmailChange(email: String) {
         _uiState.update { it.copy(email = email, error = null) }
     }

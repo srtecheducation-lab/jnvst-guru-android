@@ -1,6 +1,12 @@
 package com.jnvst.guru.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -79,12 +85,18 @@ fun JnvstNavGraph(
 ) {
     val practiceViewModel: PracticeViewModel = viewModel()
     val loginViewModel: LoginViewModel = viewModel()
+    val uiState by loginViewModel.uiState.collectAsState()
 
-    NavHost(
-        navController = navController,
-        startDestination = if (loginViewModel.checkSession()) Screen.Home.route else Screen.Login.route,
-        modifier = modifier
-    ) {
+    if (uiState.isInitializing) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else {
+        NavHost(
+            navController = navController,
+            startDestination = if (uiState.isLoginSuccessful) Screen.Home.route else Screen.Login.route,
+            modifier = modifier
+        ) {
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
@@ -379,6 +391,7 @@ fun JnvstNavGraph(
             ProfileScreen(
                 onBackClick = { navController.popBackStack() }
             )
+        }
         }
     }
 }

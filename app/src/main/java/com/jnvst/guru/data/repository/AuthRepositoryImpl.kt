@@ -4,9 +4,16 @@ import com.jnvst.guru.data.network.SupabaseClient
 import com.jnvst.guru.domain.repository.AuthRepository
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
+import io.github.jan.supabase.auth.status.SessionStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class AuthRepositoryImpl : AuthRepository {
     
+    override val sessionStatus: Flow<Boolean> = SupabaseClient.client.auth.sessionStatus.map {
+        it is SessionStatus.Authenticated
+    }
+
     override fun isLoggedIn(): Boolean {
         return SupabaseClient.client.auth.currentSessionOrNull() != null
     }
