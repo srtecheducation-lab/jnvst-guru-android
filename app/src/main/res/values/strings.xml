@@ -179,6 +179,22 @@
     <string name="btn_back_to_login">Back to Login</string>
     <string name="label_logout">Logout</string>
 
+    <!-- Create Profile -->
+    <string name="title_create_profile">Complete Your Profile</string>
+    <string name="label_name">Full Name</string>
+    <string name="label_dob">Date of Birth (YYYY-MM-DD)</string>
+    <string name="label_gender">Gender</string>
+    <string name="label_category">Category</string>
+    <string name="label_residential">Residential Area</string>
+    <string name="label_class_level">Class Level</string>
+    <string name="label_state">State</string>
+    <string name="label_district">District</string>
+    <string name="label_language">Preferred Language</string>
+    <string name="label_exam_session">Target Exam Session</string>
+    <string name="btn_create_profile">Create Profile</string>
+    <string name="hint_select">Select</string>
+    <string name="error_fill_all">Please fill all required fields</string>
+
     <!-- Selection Screens -->
     <string name="title_practice_mode">Practice</string>
     <string name="title_topic_practice">Topic-wise Practice</string>

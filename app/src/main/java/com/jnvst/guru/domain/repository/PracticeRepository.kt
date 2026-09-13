@@ -56,4 +56,21 @@ interface PracticeRepository {
     ): Resource<PracticeAttempt>
 
     suspend fun getStudentProfile(): Resource<StudentProfile>
+
+    suspend fun createStudentProfile(
+        name: String,
+        dateOfBirth: String,
+        gender: String,
+        category: String,
+        residentialArea: String,
+        classLevel: Int,
+        stateId: Long,
+        districtId: Long,
+        preferredLanguage: String,
+        examSessionId: Long
+    ): Resource<StudentProfile>
+
+    suspend fun getStates(): Resource<List<State>>
+
+    suspend fun getDistricts(stateId: Long): Resource<List<District>>
 }

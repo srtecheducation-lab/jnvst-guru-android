@@ -21,10 +21,11 @@ import com.jnvst.guru.ui.auth.LoginScreen
 import com.jnvst.guru.ui.auth.LoginViewModel
 import com.jnvst.guru.ui.auth.SignupScreen
 import com.jnvst.guru.ui.auth.SignupViewModel
-import com.jnvst.guru.ui.practice.*
+import com.jnvst.guru.ui.profile.*
 import com.jnvst.guru.ui.tests.*
 import com.jnvst.guru.ui.progress.*
-import com.jnvst.guru.ui.profile.*
+import com.jnvst.guru.domain.util.Resource
+import com.jnvst.guru.ui.practice.*
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -77,6 +78,7 @@ sealed class Screen(val route: String) {
     
     // Profile
     object Profile : Screen("profile")
+    object CreateProfile : Screen("create_profile")
     object Login : Screen("login")
     object Signup : Screen("signup")
 }
@@ -89,6 +91,15 @@ fun JnvstNavGraph(
     val practiceViewModel: PracticeViewModel = viewModel()
     val loginViewModel: LoginViewModel = viewModel()
     val uiState by loginViewModel.uiState.collectAsState()
+    val profileState by practiceViewModel.studentProfile.collectAsState()
+
+    androidx.compose.runtime.LaunchedEffect(profileState) {
+        if (profileState is Resource.Success && profileState?.data?.exists == false) {
+            navController.navigate(Screen.CreateProfile.route) {
+                popUpTo(Screen.Home.route) { inclusive = true }
+            }
+        }
+    }
 
     if (uiState.isInitializing) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -410,6 +421,17 @@ fun JnvstNavGraph(
                     loginViewModel.logout()
                 },
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.CreateProfile.route) {
+            CreateProfileScreen(
+                onProfileCreated = {
+                    practiceViewModel.loadStudentProfile()
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.CreateProfile.route) { inclusive = true }
+                    }
+                }
             )
         }
     }

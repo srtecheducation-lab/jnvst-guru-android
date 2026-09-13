@@ -6,6 +6,7 @@ import com.jnvst.guru.data.network.dto.AnswerRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.MatQuestionDto
 import com.jnvst.guru.data.network.dto.MatTopicDto
+import com.jnvst.guru.data.network.dto.StudentProfileRequestDto
 import com.jnvst.guru.data.network.util.MatImageUrlBuilder
 import com.jnvst.guru.domain.model.*
 import com.jnvst.guru.domain.repository.PracticeRepository
@@ -318,11 +319,91 @@ class PracticeRepositoryImpl : PracticeRepository {
             val dto = NetworkModule.arithmeticService.getStudentProfile()
             Resource.Success(StudentProfile(
                 exists = dto.exists,
+                id = dto.id,
+                userId = dto.userId,
                 name = dto.name,
-                preferredLanguage = dto.preferredLanguage
+                dateOfBirth = dto.dateOfBirth,
+                gender = dto.gender,
+                category = dto.category,
+                residentialArea = dto.residentialArea,
+                classLevel = dto.classLevel,
+                stateId = dto.stateId,
+                stateName = dto.stateName,
+                districtId = dto.districtId,
+                districtName = dto.districtName,
+                preferredLanguage = dto.preferredLanguage,
+                examSessionId = dto.examSessionId,
+                examSessionName = dto.examSession?.sessionName
             ))
         } catch (e: Exception) {
             Resource.Error(e.message ?: "Failed to fetch student profile")
+        }
+    }
+
+    override suspend fun createStudentProfile(
+        name: String,
+        dateOfBirth: String,
+        gender: String,
+        category: String,
+        residentialArea: String,
+        classLevel: Int,
+        stateId: Long,
+        districtId: Long,
+        preferredLanguage: String,
+        examSessionId: Long
+    ): Resource<StudentProfile> {
+        return try {
+            val request = StudentProfileRequestDto(
+                name = name,
+                dateOfBirth = dateOfBirth,
+                gender = gender,
+                category = category,
+                residentialArea = residentialArea,
+                classLevel = classLevel,
+                stateId = stateId,
+                districtId = districtId,
+                preferredLanguage = preferredLanguage,
+                examSessionId = examSessionId
+            )
+            val dto = NetworkModule.arithmeticService.createStudentProfile(request)
+            Resource.Success(StudentProfile(
+                exists = true,
+                id = dto.id,
+                userId = dto.userId,
+                name = dto.name,
+                dateOfBirth = dto.dateOfBirth,
+                gender = dto.gender,
+                category = dto.category,
+                residentialArea = dto.residentialArea,
+                classLevel = dto.classLevel,
+                stateId = dto.stateId,
+                stateName = dto.stateName,
+                districtId = dto.districtId,
+                districtName = dto.districtName,
+                preferredLanguage = dto.preferredLanguage,
+                examSessionId = dto.examSessionId,
+                examSessionName = dto.examSession?.sessionName
+            ))
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to create student profile")
+        }
+    }
+
+    override suspend fun getStates(): Resource<List<State>> {
+        return try {
+            val dtos = NetworkModule.arithmeticService.getStates()
+            Resource.Success(dtos.map { State(it.id, it.code, it.name) })
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to fetch states")
+        }
+    }
+
+    override suspend fun getDistricts(stateId: Long): Resource<List<District>> {
+        return try {
+            val dtos = NetworkModule.arithmeticService.getDistricts(stateId)
+            Resource.Success(dtos.map { District(it.id, it.code, it.name) })
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to fetch districts")
         }
     }
 }

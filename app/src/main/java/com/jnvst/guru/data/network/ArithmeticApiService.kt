@@ -1,16 +1,20 @@
 package com.jnvst.guru.data.network
 
 import com.jnvst.guru.data.network.dto.ArithmeticQuestionDto
+import com.jnvst.guru.data.network.dto.DistrictDto
 import com.jnvst.guru.data.network.dto.MatQuestionDto
 import com.jnvst.guru.data.network.dto.MatTopicDto
 import com.jnvst.guru.data.network.dto.PageResponse
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptResponseDto
 import com.jnvst.guru.data.network.dto.PracticeStatusResponseDto
+import com.jnvst.guru.data.network.dto.StateDto
 import com.jnvst.guru.data.network.dto.StudentProfileDto
+import com.jnvst.guru.data.network.dto.StudentProfileRequestDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ArithmeticApiService {
@@ -61,4 +65,17 @@ interface ArithmeticApiService {
 
     @GET("/api/v1/student-profiles/me")
     suspend fun getStudentProfile(): StudentProfileDto
+
+    @POST("/api/v1/student-profiles")
+    suspend fun createStudentProfile(
+        @Body request: StudentProfileRequestDto
+    ): StudentProfileDto
+
+    @GET("/api/v1/reference/states")
+    suspend fun getStates(): List<StateDto>
+
+    @GET("/api/v1/reference/states/{stateId}/districts")
+    suspend fun getDistricts(
+        @Path("stateId") stateId: Long
+    ): List<DistrictDto>
 }
