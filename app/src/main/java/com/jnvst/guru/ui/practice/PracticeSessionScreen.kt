@@ -22,7 +22,10 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
 import com.jnvst.guru.R
 import com.jnvst.guru.domain.model.Question
 import com.jnvst.guru.domain.model.Topic
@@ -41,6 +44,27 @@ fun PracticeSessionScreen(
     val submissionResult by viewModel.submissionResult.collectAsState()
     val isReviewMode by viewModel.isReviewMode.collectAsState()
     val matTopicsMetadata by viewModel.matTopicsMetadata.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(currentIndex, questionsResource) {
+        val questions = questionsResource.data ?: return@LaunchedEffect
+        val nextIndex = currentIndex + 1
+        if (nextIndex < questions.size) {
+            val nextQuestion = questions[nextIndex]
+            val imagesToPreload = mutableListOf<String>()
+            nextQuestion.questionImageUrl?.let { imagesToPreload.add(it) }
+            nextQuestion.optionImageUrls?.let { imagesToPreload.addAll(it) }
+            
+            imagesToPreload.forEach { url ->
+                if (url.isNotEmpty()) {
+                    val request = ImageRequest.Builder(context)
+                        .data(url)
+                        .build()
+                    context.imageLoader.enqueue(request)
+                }
+            }
+        }
+    }
 
     LaunchedEffect(submissionResult) {
         if (submissionResult is Resource.Success) {
