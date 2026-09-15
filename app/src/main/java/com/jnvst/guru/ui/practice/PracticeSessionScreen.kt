@@ -334,15 +334,15 @@ fun QuestionContent(
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
+                        .height(160.dp)
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = androidx.compose.ui.layout.ContentScale.Fit
                 )
             }
         }
 
-        if (question.topicCode == "ODD_ONE_OUT" && !question.optionImageUrls.isNullOrEmpty()) {
-            // 2x2 Grid for ODD_ONE_OUT
+        if ((question.topicCode == "ODD_ONE_OUT" || question.topicCode == "FIGURE_MATCHING") && !question.optionImageUrls.isNullOrEmpty()) {
+            // 2x2 Grid for ODD_ONE_OUT and FIGURE_MATCHING
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -508,7 +508,7 @@ fun MatOptionCard(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp),
+                    .height(120.dp),
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
             
