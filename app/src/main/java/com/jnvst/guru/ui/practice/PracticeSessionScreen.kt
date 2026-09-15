@@ -341,8 +341,8 @@ fun QuestionContent(
             }
         }
 
-        if ((question.topicCode == "ODD_ONE_OUT" || question.topicCode == "FIGURE_MATCHING") && !question.optionImageUrls.isNullOrEmpty()) {
-            // 2x2 Grid for ODD_ONE_OUT and FIGURE_MATCHING
+        if ((question.topicCode == "ODD_ONE_OUT" || question.topicCode == "FIGURE_MATCHING" || question.topicCode == "FIGURE_COMPLETION") && !question.optionImageUrls.isNullOrEmpty()) {
+            // 2x2 Grid for ODD_ONE_OUT, FIGURE_MATCHING and FIGURE_COMPLETION
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
