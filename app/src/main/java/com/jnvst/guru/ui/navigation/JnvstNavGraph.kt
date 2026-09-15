@@ -161,10 +161,19 @@ fun JnvstNavGraph(
                 mode = mode,
                 viewModel = practiceViewModel,
                 onSubjectSelected = { subjectId ->
-                    if (mode == "topic") {
-                        navController.navigate(Screen.TopicSelection.createRoute(subjectId))
+                    if (subjectId.equals("language", ignoreCase = true)) {
+                        if (mode == "topic") {
+                            navController.navigate(Screen.TopicSelection.createRoute(subjectId))
+                        } else {
+                            // Subject-wise Language skips Difficulty
+                            navController.navigate(Screen.SetSelection.createRoute(mode, subjectId, "NONE"))
+                        }
                     } else {
-                        navController.navigate(Screen.DifficultySelection.createRoute(mode, subjectId))
+                        if (mode == "topic") {
+                            navController.navigate(Screen.TopicSelection.createRoute(subjectId))
+                        } else {
+                            navController.navigate(Screen.DifficultySelection.createRoute(mode, subjectId))
+                        }
                     }
                 },
                 onBackClick = { navController.popBackStack() }
@@ -180,7 +189,12 @@ fun JnvstNavGraph(
                 subjectId = subjectId,
                 viewModel = practiceViewModel,
                 onTopicSelected = { topicId ->
-                    navController.navigate(Screen.DifficultySelection.createRoute("topic", subjectId, topicId))
+                    if (subjectId.equals("language", ignoreCase = true)) {
+                        // Language skips Difficulty
+                        navController.navigate(Screen.SetSelection.createRoute("topic", subjectId, "NONE", topicId))
+                    } else {
+                        navController.navigate(Screen.DifficultySelection.createRoute("topic", subjectId, topicId))
+                    }
                 },
                 onBackClick = { navController.popBackStack() }
             )

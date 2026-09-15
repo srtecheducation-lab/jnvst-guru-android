@@ -41,6 +41,9 @@ class PracticeViewModel(
     private val _questions = MutableStateFlow<Resource<List<Question>>>(Resource.Loading())
     val questions: StateFlow<Resource<List<Question>>> = _questions.asStateFlow()
 
+    private val _sessionItems = MutableStateFlow<Resource<List<PracticeSessionItem>>>(Resource.Loading())
+    val sessionItems: StateFlow<Resource<List<PracticeSessionItem>>> = _sessionItems.asStateFlow()
+
     private val _currentQuestionIndex = MutableStateFlow(0)
     val currentQuestionIndex: StateFlow<Int> = _currentQuestionIndex.asStateFlow()
 
@@ -69,6 +72,7 @@ class PracticeViewModel(
 
     private fun resetSessionState() {
         _questions.value = Resource.Loading()
+        _sessionItems.value = Resource.Loading()
         _submissionResult.value = null
         _latestAttempt.value = null
         _isReviewMode.value = false
@@ -116,6 +120,33 @@ class PracticeViewModel(
                     size = 20
                 )
                 _questions.value = result
+                // Also populate sessionItems for unified UI
+                if (result is Resource.Success) {
+                    _sessionItems.value = Resource.Success(result.data!!.map { PracticeSessionItem.QuestionItem(it) })
+                }
+            } else if (subjectId.equals("language", ignoreCase = true)) {
+                practiceMetadata = PracticeMetadata(mode, subjectId, topicId, difficulty, page)
+                val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+                val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+                
+                val result = repository.getLanguageQuestions(apiLanguage, page, 4)
+                if (result is Resource.Success) {
+                    val passages = result.data ?: emptyList()
+                    val items = mutableListOf<PracticeSessionItem>()
+                    passages.forEach { passage ->
+                        items.add(PracticeSessionItem.PassageItem(passage.id, passage.number, passage.text, passages.size))
+                        passage.questions.forEach { q ->
+                            items.add(PracticeSessionItem.QuestionItem(q, passage.id, passage.number))
+                        }
+                    }
+                    _sessionItems.value = Resource.Success(items)
+                    // Also populate _questions for submission logic compatibility
+                    val allQuestions = passages.flatMap { it.questions }
+                    _questions.value = Resource.Success(allQuestions)
+                } else {
+                    _sessionItems.value = Resource.Error(result.message ?: "Error")
+                    _questions.value = Resource.Error(result.message ?: "Error")
+                }
             } else {
                 val type = when(topicId) {
                     "analogy" -> "ANALOGY"
@@ -142,13 +173,17 @@ class PracticeViewModel(
                     size = 20
                 )
                 _questions.value = result
+                // Also populate sessionItems for unified UI
+                if (result is Resource.Success) {
+                    _sessionItems.value = Resource.Success(result.data!!.map { PracticeSessionItem.QuestionItem(it) })
+                }
             }
         }
     }
 
     fun nextQuestion() {
-        val currentList = _questions.value.data ?: return
-        if (_currentQuestionIndex.value < currentList.size - 1) {
+        val currentItems = _sessionItems.value.data ?: return
+        if (_currentQuestionIndex.value < currentItems.size - 1) {
             _currentQuestionIndex.value += 1
         }
     }
@@ -159,12 +194,39 @@ class PracticeViewModel(
         }
     }
 
-    fun selectOption(index: Int) {
-        val currentList = _questions.value.data?.toMutableList() ?: return
+    fun goToPassage() {
+        val currentItems = _sessionItems.value.data ?: return
         val currentIdx = _currentQuestionIndex.value
-        if (currentIdx in currentList.indices) {
-            currentList[currentIdx] = currentList[currentIdx].copy(selectedOptionIndex = index)
-            _questions.value = Resource.Success(currentList)
+        if (currentIdx in currentItems.indices) {
+            val item = currentItems[currentIdx]
+            if (item is PracticeSessionItem.QuestionItem) {
+                // Find the nearest previous PassageItem
+                val passageIdx = currentItems.subList(0, currentIdx).indexOfLast { it is PracticeSessionItem.PassageItem }
+                if (passageIdx != -1) {
+                    _currentQuestionIndex.value = passageIdx
+                }
+            }
+        }
+    }
+
+    fun selectOption(index: Int) {
+        val currentItems = _sessionItems.value.data?.toMutableList() ?: return
+        val currentIdx = _currentQuestionIndex.value
+        if (currentIdx in currentItems.indices) {
+            val item = currentItems[currentIdx]
+            if (item is PracticeSessionItem.QuestionItem) {
+                val updatedQuestion = item.question.copy(selectedOptionIndex = index)
+                currentItems[currentIdx] = item.copy(question = updatedQuestion)
+                _sessionItems.value = Resource.Success(currentItems)
+                
+                // Sync with _questions for submission logic
+                val allQuestions = _questions.value.data?.toMutableList() ?: return
+                val qIdx = allQuestions.indexOfFirst { it.id == updatedQuestion.id }
+                if (qIdx != -1) {
+                    allQuestions[qIdx] = updatedQuestion
+                    _questions.value = Resource.Success(allQuestions)
+                }
+            }
         }
     }
 
@@ -185,12 +247,16 @@ class PracticeViewModel(
                 metadata.topicType to null
             }
 
+            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+
             val result = repository.submitPracticeAttempt(
                 mode = metadata.mode,
                 subject = metadata.subjectId,
                 topic = topic,
                 topicId = tId,
                 difficulty = metadata.difficulty,
+                language = apiLanguage,
                 page = metadata.page,
                 answers = answers
             )
@@ -202,8 +268,10 @@ class PracticeViewModel(
         resetSessionState() // Synchronously reset any stale data
         viewModelScope.launch {
             _setStatuses.value = Resource.Loading()
-            val (type, tId) = if (subjectId == "mat") {
+            val (type, tId) = if (subjectId.equals("mat", ignoreCase = true)) {
                 null to topicId?.toLongOrNull()
+            } else if (subjectId.equals("language", ignoreCase = true)) {
+                null to null
             } else {
                 val type = when(topicId) {
                     "analogy" -> "ANALOGY"
@@ -214,7 +282,11 @@ class PracticeViewModel(
                 }
                 type to null
             }
-            _setStatuses.value = repository.getPracticeStatus(mode, subjectId, type, tId, difficulty)
+            
+            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+
+            _setStatuses.value = repository.getPracticeStatus(mode, subjectId, type, tId, difficulty, apiLanguage)
         }
     }
 
@@ -236,17 +308,30 @@ class PracticeViewModel(
                 }
                 type to null
             }
-            _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, page)
+            
+            // Check if Language to add language parameter?
+            // Existing repository.getLatestAttempt:
+            // suspend fun getLatestAttempt(mode: String, subject: String, topic: String?, topicId: Long?, difficulty: String, page: Int): Resource<PracticeAttempt>
+            // I should update it to support language.
+            
+            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+
+            _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, apiLanguage, page)
         }
     }
 
     fun enterReviewMode(mode: String, subjectId: String, topicId: String?, difficulty: String, page: Int) {
         _submissionResult.value = null
         _questions.value = Resource.Loading()
+        _sessionItems.value = Resource.Loading()
         _isReviewMode.value = true
         _currentQuestionIndex.value = 0
         
         viewModelScope.launch {
+            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
+            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+
             // Ensure metadata is loaded for MAT
             if (subjectId.equals("mat", ignoreCase = true) && _matTopicsMetadata.value.isEmpty()) {
                 repository.getTopicsForSubject("mat").collect {
@@ -270,27 +355,46 @@ class PracticeViewModel(
             // Sync metadata
             practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
             
-            val qResult = if (subjectId.equals("mat", ignoreCase = true)) {
-                repository.getMatQuestions(topicId?.toLongOrNull(), difficulty, page, 20)
-            } else {
-                val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-                val apiLanguage = when (languageCode.lowercase()) {
-                    "bn" -> "BENGALI"
-                    else -> "ENGLISH"
+            if (subjectId.equals("language", ignoreCase = true)) {
+                val result = repository.getLanguageQuestions(apiLanguage, page, 4)
+                if (result is Resource.Success) {
+                    val passages = result.data ?: emptyList()
+                    val items = mutableListOf<PracticeSessionItem>()
+                    passages.forEach { passage ->
+                        items.add(PracticeSessionItem.PassageItem(passage.id, passage.number, passage.text, passages.size))
+                        passage.questions.forEach { q ->
+                            items.add(PracticeSessionItem.QuestionItem(q, passage.id, passage.number))
+                        }
+                    }
+                    _sessionItems.value = Resource.Success(items)
+                    val allQuestions = passages.flatMap { it.questions }
+                    _questions.value = Resource.Success(allQuestions)
                 }
-                repository.getArithmeticQuestions(type, difficulty, apiLanguage, page, 20)
+            } else if (subjectId.equals("mat", ignoreCase = true)) {
+                val result = repository.getMatQuestions(topicId?.toLongOrNull(), difficulty, page, 20)
+                _questions.value = result
+                if (result is Resource.Success) {
+                    _sessionItems.value = Resource.Success(result.data!!.map { PracticeSessionItem.QuestionItem(it) })
+                }
+            } else {
+                val result = repository.getArithmeticQuestions(type, difficulty, apiLanguage, page, 20)
+                _questions.value = result
+                if (result is Resource.Success) {
+                    _sessionItems.value = Resource.Success(result.data!!.map { PracticeSessionItem.QuestionItem(it) })
+                }
             }
             
             // 2. Load latest attempt if not already loaded or different
             if (_latestAttempt.value?.data == null) {
                 val tId = if (subjectId.equals("mat", ignoreCase = true)) topicId?.toLongOrNull() else null
-                _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, page)
+                _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, apiLanguage, page)
             }
             
             val attempt = _latestAttempt.value?.data
-            val currentQuestions = qResult.data
+            val currentQuestions = _questions.value.data
             
             if (attempt != null && currentQuestions != null) {
+                // Update selections based on attempt
                 val updatedQuestions = currentQuestions.map { question ->
                     val answer = attempt.answers.find { it.questionId == question.id }
                     val selectedIdx = when (answer?.selectedOption) {
@@ -310,8 +414,20 @@ class PracticeViewModel(
                     question.copy(selectedOptionIndex = selectedIdx, correctOptionIndex = correctIdx)
                 }
                 _questions.value = Resource.Success(updatedQuestions)
-            } else {
-                _questions.value = qResult
+                
+                // Also update sessionItems
+                val currentItems = _sessionItems.value.data?.toMutableList()
+                if (currentItems != null) {
+                    currentItems.forEachIndexed { idx, item ->
+                        if (item is PracticeSessionItem.QuestionItem) {
+                            val updatedQ = updatedQuestions.find { it.id == item.question.id }
+                            if (updatedQ != null) {
+                                currentItems[idx] = item.copy(question = updatedQ)
+                            }
+                        }
+                    }
+                    _sessionItems.value = Resource.Success(currentItems)
+                }
             }
         }
     }

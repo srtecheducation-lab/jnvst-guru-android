@@ -6,8 +6,9 @@ import kotlinx.serialization.Serializable
 data class PracticeStatusResponseDto(
     val practiceMode: String,
     val subject: String,
-    val topic: String?,
-    val difficulty: String,
+    val topic: String? = null,
+    val topicId: Long? = null,
+    val difficulty: String? = null,
     val sets: List<SetStatusDto>
 )
 

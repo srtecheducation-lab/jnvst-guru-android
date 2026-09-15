@@ -8,7 +8,7 @@ data class PracticeAttemptResponseDto(
     val practiceMode: String,
     val subject: String,
     val topic: String?,
-    val difficulty: String,
+    val difficulty: String? = null,
     val page: Int,
     val score: Int,
     val questionCount: Int,

@@ -3,6 +3,8 @@ package com.jnvst.guru.ui.practice
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -27,6 +29,7 @@ import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
 import com.jnvst.guru.R
+import com.jnvst.guru.domain.model.PracticeSessionItem
 import com.jnvst.guru.domain.model.Question
 import com.jnvst.guru.domain.model.Topic
 import com.jnvst.guru.domain.util.Resource
@@ -39,28 +42,31 @@ fun PracticeSessionScreen(
     onBackClick: () -> Unit,
     onFinish: () -> Unit
 ) {
-    val questionsResource by viewModel.questions.collectAsState()
+    val itemsResource by viewModel.sessionItems.collectAsState()
     val currentIndex by viewModel.currentQuestionIndex.collectAsState()
     val submissionResult by viewModel.submissionResult.collectAsState()
     val isReviewMode by viewModel.isReviewMode.collectAsState()
     val matTopicsMetadata by viewModel.matTopicsMetadata.collectAsState()
     val context = LocalContext.current
 
-    LaunchedEffect(currentIndex, questionsResource) {
-        val questions = questionsResource.data ?: return@LaunchedEffect
+    LaunchedEffect(currentIndex, itemsResource) {
+        val items = itemsResource.data ?: return@LaunchedEffect
         val nextIndex = currentIndex + 1
-        if (nextIndex < questions.size) {
-            val nextQuestion = questions[nextIndex]
-            val imagesToPreload = mutableListOf<String>()
-            nextQuestion.questionImageUrl?.let { imagesToPreload.add(it) }
-            nextQuestion.optionImageUrls?.let { imagesToPreload.addAll(it) }
-            
-            imagesToPreload.forEach { url ->
-                if (url.isNotEmpty()) {
-                    val request = ImageRequest.Builder(context)
-                        .data(url)
-                        .build()
-                    context.imageLoader.enqueue(request)
+        if (nextIndex < items.size) {
+            val nextItem = items[nextIndex]
+            if (nextItem is PracticeSessionItem.QuestionItem) {
+                val nextQuestion = nextItem.question
+                val imagesToPreload = mutableListOf<String>()
+                nextQuestion.questionImageUrl?.let { imagesToPreload.add(it) }
+                nextQuestion.optionImageUrls?.let { imagesToPreload.addAll(it) }
+                
+                imagesToPreload.forEach { url ->
+                    if (url.isNotEmpty()) {
+                        val request = ImageRequest.Builder(context)
+                            .data(url)
+                            .build()
+                        context.imageLoader.enqueue(request)
+                    }
                 }
             }
         }
@@ -84,9 +90,9 @@ fun PracticeSessionScreen(
             )
         },
         bottomBar = {
-            if (questionsResource is Resource.Success && questionsResource.data != null) {
-                val questions = questionsResource.data!!
-                if (questions.isNotEmpty()) {
+            if (itemsResource is Resource.Success && itemsResource.data != null) {
+                val items = itemsResource.data!!
+                if (items.isNotEmpty()) {
                     BottomAppBar(
                         containerColor = MaterialTheme.colorScheme.surface,
                         contentPadding = PaddingValues(horizontal = 16.dp)
@@ -109,7 +115,14 @@ fun PracticeSessionScreen(
                                 Spacer(modifier = Modifier.width(100.dp)) // Spacer to keep Next on the right
                             }
 
-                            if (currentIndex < questions.size - 1) {
+                            val currentItem = items[currentIndex]
+                            if (currentItem is PracticeSessionItem.QuestionItem && currentItem.passageId != null) {
+                                TextButton(onClick = { viewModel.goToPassage() }) {
+                                    Text(stringResource(R.string.btn_view_passage))
+                                }
+                            }
+
+                            if (currentIndex < items.size - 1) {
                                 Button(
                                     onClick = { viewModel.nextQuestion() },
                                     shape = MaterialTheme.shapes.medium
@@ -148,7 +161,7 @@ fun PracticeSessionScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when (questionsResource) {
+            when (itemsResource) {
                 is Resource.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
@@ -161,8 +174,8 @@ fun PracticeSessionScreen(
                     )
                 }
                 is Resource.Success -> {
-                    val questions = questionsResource.data!!
-                    if (questions.isEmpty()) {
+                    val items = itemsResource.data!!
+                    if (items.isEmpty()) {
                         Text(
                             text = stringResource(R.string.msg_no_questions),
                             modifier = Modifier.align(Alignment.Center).padding(24.dp),
@@ -170,19 +183,77 @@ fun PracticeSessionScreen(
                             style = MaterialTheme.typography.bodyLarge
                         )
                     } else {
-                        val currentQuestion = questions[currentIndex]
-                        QuestionContent(
-                            question = currentQuestion,
-                            index = currentIndex,
-                            totalCount = questions.size,
-                            isReviewMode = isReviewMode,
-                            matTopicsMetadata = matTopicsMetadata,
-                            onOptionSelected = { viewModel.selectOption(it) }
-                        )
+                        val currentItem = items[currentIndex]
+                        when (currentItem) {
+                            is PracticeSessionItem.PassageItem -> {
+                                PassageContent(currentItem) { viewModel.nextQuestion() }
+                            }
+                            is PracticeSessionItem.QuestionItem -> {
+                                QuestionContent(
+                                    question = currentItem.question,
+                                    index = items.subList(0, currentIndex).count { it is PracticeSessionItem.QuestionItem },
+                                    totalCount = items.count { it is PracticeSessionItem.QuestionItem },
+                                    isReviewMode = isReviewMode,
+                                    matTopicsMetadata = matTopicsMetadata,
+                                    onOptionSelected = { viewModel.selectOption(it) }
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun PassageContent(
+    passage: PracticeSessionItem.PassageItem,
+    onStartQuestions: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(R.string.label_passage_counter, passage.number, passage.totalPassages),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        ) {
+            Text(
+                text = passage.text,
+                style = MaterialTheme.typography.bodyLarge,
+                lineHeight = 24.sp,
+                modifier = Modifier.padding(20.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Button(
+            onClick = onStartQuestions,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text(stringResource(R.string.btn_start_questions), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 

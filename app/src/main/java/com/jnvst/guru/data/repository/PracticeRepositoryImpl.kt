@@ -4,8 +4,10 @@ import com.jnvst.guru.R
 import com.jnvst.guru.data.network.NetworkModule
 import com.jnvst.guru.data.network.dto.AnswerRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
+import com.jnvst.guru.data.network.dto.LanguageQuestionDto
 import com.jnvst.guru.data.network.dto.MatQuestionDto
 import com.jnvst.guru.data.network.dto.MatTopicDto
+import com.jnvst.guru.data.network.dto.StudentLanguagePassageResponseDto
 import com.jnvst.guru.data.network.dto.StudentProfileRequestDto
 import com.jnvst.guru.data.network.util.MatImageUrlBuilder
 import com.jnvst.guru.domain.model.*
@@ -77,7 +79,7 @@ class PracticeRepositoryImpl : PracticeRepository {
     override fun getSubjects(): Flow<List<Subject>> = flowOf(subjects)
 
     override fun getTopicsForSubject(subjectId: String): Flow<List<Topic>> = flow {
-        if (subjectId == "mat") {
+        if (subjectId.equals("mat", ignoreCase = true)) {
             try {
                 val response = NetworkModule.arithmeticService.getMatTopics()
                 val topics = response.content.sortedBy { it.sortOrder }.map { dto ->
@@ -97,6 +99,17 @@ class PracticeRepositoryImpl : PracticeRepository {
                 android.util.Log.e("PracticeRepo", "Error fetching MAT topics", e)
                 emit(emptyList())
             }
+        } else if (subjectId.equals("language", ignoreCase = true)) {
+            // Hard-coded "Passage" topic for Language as per requirement
+            emit(listOf(
+                Topic(
+                    id = "passage",
+                    subjectId = "language",
+                    nameResId = R.string.topic_reading_comprehension, // Use existing string for Reading Comprehension/Passage
+                    questionCount = 100, // Placeholder
+                    durationMinutes = 60
+                )
+            ))
         } else {
             emit(topics[subjectId] ?: emptyList())
         }
@@ -207,12 +220,51 @@ class PracticeRepositoryImpl : PracticeRepository {
         }
     }
 
+    override suspend fun getLanguageQuestions(
+        language: String,
+        page: Int,
+        size: Int
+    ): Resource<List<LanguagePassage>> {
+        return try {
+            val response = NetworkModule.arithmeticService.getLanguageQuestions(language.uppercase(), page, size)
+            val passages = response.content
+                .filter { it.passageText != null } // Skip empty passages
+                .mapIndexed { index, passageDto ->
+                    LanguagePassage(
+                        id = passageDto.passageId,
+                        number = index + 1, // Reset to 1-4 based on position in current page
+                        text = passageDto.passageText!!,
+                        questions = passageDto.questions
+                            .filter { it.questionText != null && it.optionA != null }
+                            .map { qDto ->
+                                Question(
+                                    id = qDto.questionId,
+                                    questionType = "LANGUAGE",
+                                    questionText = qDto.questionText!!,
+                                    options = listOf(
+                                        qDto.optionA!!,
+                                        qDto.optionB ?: "",
+                                        qDto.optionC ?: "",
+                                        qDto.optionD ?: ""
+                                    ),
+                                    difficulty = ""
+                                )
+                            }
+                    )
+                }
+            Resource.Success(passages)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to fetch Language questions")
+        }
+    }
+
     override suspend fun submitPracticeAttempt(
         mode: String,
         subject: String,
         topic: String?,
         topicId: Long?,
         difficulty: String,
+        language: String?,
         page: Int,
         answers: List<Pair<Long, Int?>>
     ): Resource<PracticeResult> {
@@ -228,11 +280,12 @@ class PracticeRepositoryImpl : PracticeRepository {
                 AnswerRequestDto(qId, optionChar)
             }
             val request = PracticeAttemptRequestDto(
-                practiceMode = mode.uppercase(),
+                practiceMode = if (subject.lowercase() == "language") "SUBJECT" else mode.uppercase(),
                 subject = subject.uppercase(),
-                topic = if (subject.lowercase() == "mat") null else topic?.uppercase(),
+                topic = if (subject.lowercase() == "mat" || subject.lowercase() == "language") null else topic?.uppercase(),
                 topicId = topicId,
-                difficulty = difficulty.uppercase(),
+                difficulty = if (subject.lowercase() == "language") null else difficulty.uppercase(),
+                language = language?.uppercase(),
                 page = page,
                 answers = answerDtos
             )
@@ -255,15 +308,17 @@ class PracticeRepositoryImpl : PracticeRepository {
         subject: String,
         topic: String?,
         topicId: Long?,
-        difficulty: String
+        difficulty: String,
+        language: String?
     ): Resource<List<SetStatus>> {
         return try {
             val response = NetworkModule.arithmeticService.getPracticeStatus(
-                practiceMode = mode.uppercase(),
+                practiceMode = if (subject.lowercase() == "language") "SUBJECT" else mode.uppercase(),
                 subject = subject.uppercase(),
-                topic = if (subject.lowercase() == "mat") null else topic?.uppercase(),
+                topic = if (subject.lowercase() == "mat" || subject.lowercase() == "language") null else topic?.uppercase(),
                 topicId = topicId,
-                difficulty = difficulty.uppercase()
+                difficulty = if (subject.lowercase() == "language") null else difficulty.uppercase(),
+                language = language?.uppercase()
             )
             val sets = response.sets.map { dto ->
                 SetStatus(
@@ -285,15 +340,17 @@ class PracticeRepositoryImpl : PracticeRepository {
         topic: String?,
         topicId: Long?,
         difficulty: String,
+        language: String?,
         page: Int
     ): Resource<PracticeAttempt> {
         return try {
             val response = NetworkModule.arithmeticService.getLatestAttempt(
-                practiceMode = mode.uppercase(),
+                practiceMode = if (subject.lowercase() == "language") "SUBJECT" else mode.uppercase(),
                 subject = subject.uppercase(),
-                topic = if (subject.lowercase() == "mat") null else topic?.uppercase(),
+                topic = if (subject.lowercase() == "mat" || subject.lowercase() == "language") null else topic?.uppercase(),
                 topicId = topicId,
-                difficulty = difficulty.uppercase(),
+                difficulty = if (subject.lowercase() == "language") null else difficulty.uppercase(),
+                language = language?.uppercase(),
                 page = page
             )
             val attempt = PracticeAttempt(

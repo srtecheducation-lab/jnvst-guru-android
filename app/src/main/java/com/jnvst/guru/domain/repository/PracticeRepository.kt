@@ -28,12 +28,19 @@ interface PracticeRepository {
         size: Int
     ): Resource<List<Question>>
 
+    suspend fun getLanguageQuestions(
+        language: String,
+        page: Int,
+        size: Int
+    ): Resource<List<LanguagePassage>>
+
     suspend fun submitPracticeAttempt(
         mode: String,
         subject: String,
         topic: String?,
         topicId: Long?,
         difficulty: String,
+        language: String?,
         page: Int,
         answers: List<Pair<Long, Int?>> // questionId to selectedOptionIndex
     ): Resource<PracticeResult>
@@ -43,7 +50,8 @@ interface PracticeRepository {
         subject: String,
         topic: String?,
         topicId: Long?,
-        difficulty: String
+        difficulty: String,
+        language: String?
     ): Resource<List<SetStatus>>
 
     suspend fun getLatestAttempt(
@@ -52,6 +60,7 @@ interface PracticeRepository {
         topic: String?,
         topicId: Long?,
         difficulty: String,
+        language: String?,
         page: Int
     ): Resource<PracticeAttempt>
 

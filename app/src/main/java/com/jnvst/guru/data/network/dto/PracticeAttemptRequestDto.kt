@@ -8,7 +8,8 @@ data class PracticeAttemptRequestDto(
     val subject: String,
     val topic: String?,
     val topicId: Long? = null,
-    val difficulty: String,
+    val difficulty: String?,
+    val language: String? = null,
     val page: Int,
     val answers: List<AnswerRequestDto>
 )

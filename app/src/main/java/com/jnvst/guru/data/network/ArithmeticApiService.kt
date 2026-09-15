@@ -9,6 +9,7 @@ import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptResponseDto
 import com.jnvst.guru.data.network.dto.PracticeStatusResponseDto
 import com.jnvst.guru.data.network.dto.StateDto
+import com.jnvst.guru.data.network.dto.StudentLanguagePassageResponseDto
 import com.jnvst.guru.data.network.dto.StudentProfileDto
 import com.jnvst.guru.data.network.dto.StudentProfileRequestDto
 import retrofit2.http.Body
@@ -39,6 +40,13 @@ interface ArithmeticApiService {
         @Query("size") size: Int
     ): PageResponse<MatQuestionDto>
 
+    @GET("/api/v1/student/language-questions")
+    suspend fun getLanguageQuestions(
+        @Query("language") language: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): PageResponse<StudentLanguagePassageResponseDto>
+
     @POST("/api/v1/student/practice-attempts")
     suspend fun submitPracticeAttempt(
         @Body request: PracticeAttemptRequestDto
@@ -50,7 +58,8 @@ interface ArithmeticApiService {
         @Query("subject") subject: String,
         @Query("topic") topic: String?,
         @Query("topicId") topicId: Long?,
-        @Query("difficulty") difficulty: String
+        @Query("difficulty") difficulty: String?,
+        @Query("language") language: String?
     ): PracticeStatusResponseDto
 
     @GET("/api/v1/student/practice-attempts/latest")
@@ -59,7 +68,8 @@ interface ArithmeticApiService {
         @Query("subject") subject: String,
         @Query("topic") topic: String?,
         @Query("topicId") topicId: Long?,
-        @Query("difficulty") difficulty: String,
+        @Query("difficulty") difficulty: String?,
+        @Query("language") language: String?,
         @Query("page") page: Int
     ): PracticeAttemptResponseDto
 
