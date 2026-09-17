@@ -1,5 +1,6 @@
 package com.jnvst.guru.data.network
 
+import com.jnvst.guru.BuildConfig
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
@@ -7,10 +8,11 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 
 object NetworkModule {
     
-    private const val BASE_URL = "http://127.0.0.1:8080/" // Localhost for emulator
+    private val BASE_URL = BuildConfig.BACKEND_BASE_URL
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -30,6 +32,9 @@ object NetworkModule {
     }
 
     private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(2, TimeUnit.MINUTES)
+        .readTimeout(2, TimeUnit.MINUTES)
+        .writeTimeout(2, TimeUnit.MINUTES)
         .addInterceptor(authInterceptor)
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
