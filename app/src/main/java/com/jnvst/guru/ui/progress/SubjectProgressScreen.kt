@@ -20,18 +20,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jnvst.guru.R
+import com.jnvst.guru.domain.util.Resource
 import com.jnvst.guru.ui.theme.BrandIndigo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubjectProgressScreen(
     subjectId: String,
+    viewModel: ProgressViewModel,
     onTopicClick: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
-    val subjectTitle = when(subjectId) {
-        "mental_ability" -> "Mental Ability"
-        "arithmetic" -> "Arithmetic"
+    val progressResource by viewModel.progress.collectAsState()
+
+    val subjectTitle = when(subjectId.uppercase()) {
+        "MENTAL_ABILITY", "MAT" -> "Mental Ability"
+        "ARITHMETIC" -> "Arithmetic"
         else -> "Language"
     }
 
@@ -49,36 +53,59 @@ fun SubjectProgressScreen(
             }
         )
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Text(
-                    text = stringResource(R.string.label_topics_in, subjectTitle),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (progressResource) {
+                is Resource.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is Resource.Error -> {
+                    Text(
+                        text = progressResource.message ?: "Error",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is Resource.Success -> {
+                    val topics = progressResource.data!!.topics.filter { 
+                        it.subject.equals(subjectId, ignoreCase = true) || 
+                        (subjectId.uppercase() == "MENTAL_ABILITY" && it.subject == "MAT")
+                    }
 
-            // Mock topics for progress
-            val topics = listOf(
-                Pair("Number System", 0.85f),
-                Pair("Fractions", 0.72f),
-                Pair("Decimals", 0.68f),
-                Pair("Percentage", 0.78f)
-            )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.label_topics_in, subjectTitle),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
 
-            items(topics) { (name, progress) ->
-                TopicProgressCard(name, progress, onClick = { onTopicClick(name.lowercase().replace(" ", "_")) })
+                        if (topics.isEmpty()) {
+                            item {
+                                Text("No topic data available for this subject.", color = Color.Gray, modifier = Modifier.padding(vertical = 16.dp))
+                            }
+                        } else {
+                            items(topics) { topic ->
+                                TopicProgressCard(
+                                    name = topic.displayName ?: topic.topic ?: "Unknown",
+                                    progress = (topic.accuracy / 100).toFloat(),
+                                    stats = "${topic.correct} / ${topic.questions}",
+                                    onClick = { onTopicClick(topic.topic ?: topic.topicId?.toString() ?: "") }
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun TopicProgressCard(name: String, progress: Float, onClick: () -> Unit) {
+fun TopicProgressCard(name: String, progress: Float, stats: String, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -99,8 +126,8 @@ fun TopicProgressCard(name: String, progress: Float, onClick: () -> Unit) {
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = name, fontWeight = FontWeight.Bold)
-                    Text(text = "34 / 40", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text(text = name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                    Text(text = stats, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
                 Spacer(Modifier.height(8.dp))
                 LinearProgressIndicator(

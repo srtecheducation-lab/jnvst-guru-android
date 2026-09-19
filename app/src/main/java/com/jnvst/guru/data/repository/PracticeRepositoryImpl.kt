@@ -463,4 +463,108 @@ class PracticeRepositoryImpl : PracticeRepository {
             Resource.Error(e.message ?: "Failed to fetch districts")
         }
     }
+
+    override suspend fun getProgress(recentPage: Int, recentLimit: Int): Resource<ProgressResponse> {
+        return try {
+            // 1. Ensure MAT topics are cached for name resolution
+            if (cachedMatTopics.isEmpty()) {
+                val matResponse = NetworkModule.arithmeticService.getMatTopics()
+                cachedMatTopics = matResponse.content.map { dto ->
+                    Topic(
+                        id = dto.id.toString(),
+                        subjectId = "mat",
+                        code = dto.code,
+                        nameOverride = dto.name,
+                        descriptionOverride = dto.description,
+                        questionCount = dto.questionCount
+                    )
+                }
+            }
+
+            // 2. Fetch Progress
+            val dto = NetworkModule.arithmeticService.getProgress(recentPage, recentLimit)
+
+            // 3. Map to Domain
+            val response = ProgressResponse(
+                overall = ProgressSummary(
+                    attempts = dto.overall.attempts,
+                    questions = dto.overall.questions,
+                    correct = dto.overall.correct,
+                    wrong = dto.overall.wrong,
+                    unanswered = dto.overall.unanswered,
+                    score = dto.overall.score,
+                    accuracy = dto.overall.accuracy
+                ),
+                subjects = dto.subjects.map { s ->
+                    SubjectProgress(
+                        subject = s.subject,
+                        attempts = s.attempts,
+                        questions = s.questions,
+                        correct = s.correct,
+                        wrong = s.wrong,
+                        unanswered = s.unanswered,
+                        score = s.score,
+                        accuracy = s.accuracy
+                    )
+                },
+                topics = dto.topics.map { t ->
+                    val displayName = if (t.subject == "MAT") {
+                        cachedMatTopics.find { it.id == t.topicId.toString() }?.nameOverride ?: "Unknown MAT"
+                    } else {
+                        // Arithmetic topics. We can map them based on enum or string codes if we have a localized map.
+                        // For now, let's use the code as is or look up from existing hardcoded list in repo.
+                        val arithTopic = topics["arithmetic"]?.find { it.id.uppercase() == t.topic?.uppercase() }
+                        arithTopic?.nameResId?.let { /* Resolving in UI? No, let's return name if possible */ }
+                        t.topic ?: "Unknown"
+                    }
+                    TopicProgress(
+                        subject = t.subject,
+                        topic = t.topic,
+                        topicId = t.topicId,
+                        attempts = t.attempts,
+                        questions = t.questions,
+                        correct = t.correct,
+                        wrong = t.wrong,
+                        unanswered = t.unanswered,
+                        score = t.score,
+                        accuracy = t.accuracy,
+                        displayName = displayName
+                    )
+                },
+                recentAttempts = dto.recentAttempts.map { r ->
+                    val title = when (r.subject) {
+                        "MAT" -> {
+                            val topicName = cachedMatTopics.find { it.id == r.topicId.toString() }?.nameOverride ?: "MAT"
+                            "$topicName Set ${r.page + 1}"
+                        }
+                        "LANGUAGE" -> "Language Passage Set ${r.page + 1}"
+                        else -> {
+                            val topicName = topics["arithmetic"]?.find { it.id.uppercase() == r.topic?.uppercase() }?.id?.replace("_", " ")?.capitalize() ?: "Arithmetic"
+                            "$topicName Set ${r.page + 1}"
+                        }
+                    }
+                    RecentAttempt(
+                        attemptId = r.attemptId,
+                        practiceMode = r.practiceMode,
+                        subject = r.subject,
+                        topic = r.topic,
+                        topicId = r.topicId,
+                        difficulty = r.difficulty,
+                        language = r.language,
+                        page = r.page,
+                        score = r.score,
+                        questionCount = r.questionCount,
+                        correctCount = r.correctCount,
+                        wrongCount = r.wrongCount,
+                        unansweredCount = r.unansweredCount,
+                        submittedAt = r.submittedAt,
+                        displayTitle = title
+                    )
+                }
+            )
+            Resource.Success(response)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to fetch progress")
+        }
+    }
 }

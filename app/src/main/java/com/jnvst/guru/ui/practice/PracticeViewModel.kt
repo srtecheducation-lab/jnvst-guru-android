@@ -82,11 +82,9 @@ class PracticeViewModel(
     init {
         loadSubjects()
         loadMockTests()
-        loadStudentProfile()
-        loadMatTopicsMetadata()
     }
 
-    private fun loadMatTopicsMetadata() {
+    fun loadMatTopicsMetadata() {
         viewModelScope.launch {
             repository.getTopicsForSubject("mat").collect {
                 _matTopicsMetadata.value = it

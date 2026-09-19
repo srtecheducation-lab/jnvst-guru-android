@@ -82,4 +82,6 @@ interface PracticeRepository {
     suspend fun getStates(): Resource<List<State>>
 
     suspend fun getDistricts(stateId: Long): Resource<List<District>>
+
+    suspend fun getProgress(recentPage: Int, recentLimit: Int): Resource<ProgressResponse>
 }

@@ -23,15 +23,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jnvst.guru.R
+import com.jnvst.guru.domain.model.ProgressResponse
+import com.jnvst.guru.domain.model.RecentAttempt
+import com.jnvst.guru.domain.model.SubjectProgress
+import com.jnvst.guru.domain.util.Resource
 import com.jnvst.guru.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressScreen(
+    viewModel: ProgressViewModel,
     onSubjectClick: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
+    val progressResource by viewModel.progress.collectAsState()
 
     Column(
         modifier = Modifier
@@ -43,12 +49,6 @@ fun ProgressScreen(
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                }
-            },
-            actions = {
-                TextButton(onClick = { /* Filter */ }) {
-                    Text(stringResource(R.string.time_filter_week), fontWeight = FontWeight.Bold)
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
                 }
             }
         )
@@ -82,27 +82,43 @@ fun ProgressScreen(
             }
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            when (selectedTab) {
-                0 -> { // Overview
-                    item { PerformanceBanner() }
-                    item { MetricsGrid() }
-                    item { PerformanceTrendSection() }
-                    item { RecentActivitySection() }
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (progressResource) {
+                is Resource.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
-                1 -> { // Subjects
-                    item {
-                        SubjectProgressList(onSubjectClick)
-                    }
+                is Resource.Error -> {
+                    Text(
+                        text = progressResource.message ?: "Something went wrong",
+                        modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                        textAlign = TextAlign.Center
+                    )
                 }
-                else -> {
-                    item {
-                        Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                            Text("Content coming soon...", color = Color.Gray)
+                is Resource.Success -> {
+                    val data = progressResource.data!!
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
+                    ) {
+                        when (selectedTab) {
+                            0 -> { // Overview
+                                item { PerformanceBanner(data.overall.accuracy) }
+                                item { MetricsGrid(data.overall) }
+                                item { PerformanceTrendSection() }
+                                item { RecentActivitySection(data.recentAttempts) }
+                            }
+                            1 -> { // Subjects
+                                item {
+                                    SubjectProgressList(data.subjects, onSubjectClick)
+                                }
+                            }
+                            2 -> { // Topics
+                                item { TopicProgressList(data.topics) }
+                            }
+                            3 -> { // Tests
+                                item { ComingSoonCard("Mock Tests analytics are coming soon!") }
+                            }
                         }
                     }
                 }
@@ -112,7 +128,7 @@ fun ProgressScreen(
 }
 
 @Composable
-fun PerformanceBanner() {
+fun PerformanceBanner(accuracy: Double) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,14 +144,14 @@ fun PerformanceBanner() {
         ) {
             Box(contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
-                    progress = { 0.75f },
+                    progress = { (accuracy / 100).toFloat() },
                     modifier = Modifier.size(80.dp),
                     color = Color.White,
                     strokeWidth = 8.dp,
                     trackColor = Color.White.copy(alpha = 0.2f),
                     strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
-                Text("75%", color = Color.White, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                Text("${accuracy.toInt()}%", color = Color.White, fontWeight = FontWeight.Black, fontSize = 18.sp)
             }
             Spacer(modifier = Modifier.width(20.dp))
             Column {
@@ -156,21 +172,21 @@ fun PerformanceBanner() {
 }
 
 @Composable
-fun MetricsGrid() {
+fun MetricsGrid(summary: com.jnvst.guru.domain.model.ProgressSummary) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             MetricCard(
                 label = stringResource(R.string.questions_solved),
-                value = "480",
-                subValue = "+120 this week",
+                value = summary.questions.toString(),
+                subValue = "${summary.attempts} Attempts",
                 icon = Icons.AutoMirrored.Filled.MenuBook,
                 color = BrandIndigo,
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 label = stringResource(R.string.average_accuracy),
-                value = "78%",
-                subValue = "+8% this week",
+                value = "${summary.accuracy.toInt()}%",
+                subValue = "Historical Avg",
                 icon = Icons.Default.EmojiEvents,
                 color = BrandEmerald,
                 modifier = Modifier.weight(1f)
@@ -178,18 +194,18 @@ fun MetricsGrid() {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             MetricCard(
-                label = stringResource(R.string.study_time),
-                value = "6h 30m",
-                subValue = "+1h 20m this week",
-                icon = Icons.Default.AccessTime,
+                label = "Correct / Wrong",
+                value = "${summary.correct} / ${summary.wrong}",
+                subValue = "Latest Performance",
+                icon = Icons.Default.CheckCircleOutline,
                 color = Color(0xFFFFA000),
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
-                label = stringResource(R.string.day_streak_label),
-                value = "12",
-                subValue = "Keep it going!",
-                icon = Icons.Default.LocalFireDepartment,
+                label = "Unanswered",
+                value = summary.unanswered.toString(),
+                subValue = "Try to complete all!",
+                icon = Icons.AutoMirrored.Filled.HelpOutline,
                 color = Color(0xFF9575CD),
                 modifier = Modifier.weight(1f)
             )
@@ -223,35 +239,31 @@ fun MetricCard(label: String, value: String, subValue: String, icon: ImageVector
 @Composable
 fun PerformanceTrendSection() {
     Column {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(text = stringResource(R.string.label_performance_trend), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            Text(text = stringResource(R.string.time_filter_week), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-        }
+        Text(text = stringResource(R.string.label_performance_trend), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
         Spacer(Modifier.height(16.dp))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color.White)
-                .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(20.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Line Chart Placeholder", color = Color.LightGray)
-        }
+        ComingSoonCard("Historical performance charts are coming soon!")
     }
 }
 
 @Composable
-fun RecentActivitySection() {
+fun RecentActivitySection(attempts: List<RecentAttempt>) {
     Column {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = stringResource(R.string.label_recent_activity), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            TextButton(onClick = {}) { Text(stringResource(R.string.btn_view_all)) }
         }
         
-        RecentActivityItem("Mock Test 1", "Today, 10:30 AM", "82%", BrandEmerald)
-        RecentActivityItem("Arithmetic: Fractions", "Yesterday", "65%", Color(0xFFFFA000))
+        if (attempts.isEmpty()) {
+            Text("No recent activity found.", modifier = Modifier.padding(vertical = 16.dp), color = Color.Gray)
+        } else {
+            attempts.forEach { attempt ->
+                RecentActivityItem(
+                    title = attempt.displayTitle ?: "${attempt.subject} Set ${attempt.page + 1}",
+                    time = attempt.submittedAt.substringBefore("T"),
+                    score = "${attempt.score} / ${attempt.questionCount}",
+                    scoreColor = if (attempt.correctCount > attempt.wrongCount) BrandEmerald else Color(0xFFFFA000)
+                )
+            }
+        }
     }
 }
 
@@ -277,13 +289,30 @@ fun RecentActivityItem(title: String, time: String, score: String, scoreColor: C
 }
 
 @Composable
-fun SubjectProgressList(onSubjectClick: (String) -> Unit) {
+fun SubjectProgressList(subjects: List<SubjectProgress>, onSubjectClick: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(text = stringResource(R.string.label_subject_wise_progress), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
         
-        SubjectProgressCard("Mental Ability", 0.82f, "120 / 150 Qs", BrandIndigo, onClick = { onSubjectClick("mental_ability") })
-        SubjectProgressCard("Arithmetic", 0.76f, "180 / 230 Qs", Color(0xFFFFA000), onClick = { onSubjectClick("arithmetic") })
-        SubjectProgressCard("Language", 0.75f, "180 / 240 Qs", BrandEmerald, onClick = { onSubjectClick("language") })
+        subjects.forEach { s ->
+            val color = when (s.subject.uppercase()) {
+                "ARITHMETIC" -> Color(0xFFFFA000)
+                "MAT" -> Color(0xFF9575CD)
+                else -> BrandEmerald
+            }
+            val title = when (s.subject.uppercase()) {
+                "ARITHMETIC" -> "Arithmetic"
+                "MAT" -> "Mental Ability (MAT)"
+                else -> "Language"
+            }
+            
+            SubjectProgressCard(
+                title = title,
+                progress = (s.accuracy / 100).toFloat(),
+                stats = "${s.correct} / ${s.questions} Correct",
+                color = color,
+                onClick = { onSubjectClick(s.subject.lowercase()) }
+            )
+        }
     }
 }
 
@@ -298,7 +327,7 @@ fun SubjectProgressCard(title: String, progress: Float, stats: String, color: Co
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = CircleShape, color = color.copy(alpha = 0.1f), modifier = Modifier.size(48.dp)) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = color, modifier = Modifier.padding(10.dp))
+                Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = color, modifier = Modifier.padding(10.dp))
             }
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
@@ -316,6 +345,40 @@ fun SubjectProgressCard(title: String, progress: Float, stats: String, color: Co
                 Spacer(Modifier.height(4.dp))
                 Text(text = "Accuracy: ${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Bold)
             }
+        }
+    }
+}
+
+@Composable
+fun TopicProgressList(topics: List<com.jnvst.guru.domain.model.TopicProgress>) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(text = "Topic-wise Accuracy", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        
+        if (topics.isEmpty()) {
+            Text("No topic data available yet.", color = Color.Gray)
+        } else {
+            topics.forEach { topic ->
+                TopicProgressCard(
+                    name = topic.displayName ?: topic.topic ?: "Unknown",
+                    progress = (topic.accuracy / 100).toFloat(),
+                    stats = "${topic.correct} / ${topic.questions}",
+                    onClick = {}
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ComingSoonCard(text: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Box(Modifier.padding(24.dp), contentAlignment = Alignment.Center) {
+            Text(text = text, style = MaterialTheme.typography.bodyMedium, color = Color.Gray, textAlign = TextAlign.Center)
         }
     }
 }

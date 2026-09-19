@@ -22,6 +22,10 @@ import com.jnvst.guru.ui.auth.LoginViewModel
 import com.jnvst.guru.ui.auth.SignupScreen
 import com.jnvst.guru.ui.auth.SignupViewModel
 import com.jnvst.guru.ui.profile.*
+import com.jnvst.guru.ui.progress.ProgressScreen
+import com.jnvst.guru.ui.progress.ProgressViewModel
+import com.jnvst.guru.ui.progress.SubjectProgressScreen
+import com.jnvst.guru.ui.progress.TopicProgressScreen
 import com.jnvst.guru.ui.tests.*
 import com.jnvst.guru.ui.progress.*
 import com.jnvst.guru.domain.util.Resource
@@ -90,8 +94,17 @@ fun JnvstNavGraph(
 ) {
     val practiceViewModel: PracticeViewModel = viewModel()
     val loginViewModel: LoginViewModel = viewModel()
+    val progressViewModel: ProgressViewModel = viewModel()
     val uiState by loginViewModel.uiState.collectAsState()
     val profileState by practiceViewModel.studentProfile.collectAsState()
+
+    androidx.compose.runtime.LaunchedEffect(uiState.isLoginSuccessful) {
+        if (uiState.isLoginSuccessful) {
+            practiceViewModel.loadStudentProfile()
+            practiceViewModel.loadMatTopicsMetadata()
+            progressViewModel.loadProgress()
+        }
+    }
 
     androidx.compose.runtime.LaunchedEffect(profileState) {
         if (profileState is Resource.Success && profileState?.data?.exists == false) {
@@ -402,6 +415,7 @@ fun JnvstNavGraph(
         // Progress Flow
         composable(Screen.Progress.route) {
             ProgressScreen(
+                viewModel = progressViewModel,
                 onSubjectClick = { subjectId -> navController.navigate(Screen.SubjectProgress.createRoute(subjectId)) },
                 onBackClick = { navController.popBackStack() }
             )
@@ -414,6 +428,7 @@ fun JnvstNavGraph(
             val subjectId = backStackEntry.arguments?.getString("subjectId") ?: ""
             SubjectProgressScreen(
                 subjectId = subjectId,
+                viewModel = progressViewModel,
                 onTopicClick = { navController.navigate(Screen.TopicProgress.createRoute(subjectId)) },
                 onBackClick = { navController.popBackStack() }
             )

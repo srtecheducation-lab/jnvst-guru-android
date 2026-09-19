@@ -8,6 +8,7 @@ import com.jnvst.guru.data.network.dto.PageResponse
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptResponseDto
 import com.jnvst.guru.data.network.dto.PracticeStatusResponseDto
+import com.jnvst.guru.data.network.dto.ProgressResponseDto
 import com.jnvst.guru.data.network.dto.StateDto
 import com.jnvst.guru.data.network.dto.StudentLanguagePassageResponseDto
 import com.jnvst.guru.data.network.dto.StudentProfileDto
@@ -75,6 +76,12 @@ interface ArithmeticApiService {
 
     @GET("/api/v1/student-profiles/me")
     suspend fun getStudentProfile(): StudentProfileDto
+
+    @GET("/api/v1/student/progress")
+    suspend fun getProgress(
+        @Query("recentPage") recentPage: Int,
+        @Query("recentLimit") recentLimit: Int
+    ): ProgressResponseDto
 
     @POST("/api/v1/student-profiles")
     suspend fun createStudentProfile(
