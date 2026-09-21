@@ -28,7 +28,6 @@ import com.jnvst.guru.ui.theme.*
 
 @Composable
 fun AppHeader(
-    streakCount: Int,
     notificationCount: Int,
     modifier: Modifier = Modifier
 ) {
@@ -57,37 +56,6 @@ fun AppHeader(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(BrandAmberLight.copy(alpha = 0.5f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LocalFireDepartment,
-                    contentDescription = null,
-                    tint = BrandAmber,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = streakCount.toString(),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Black
-                    )
-                    Text(
-                        text = stringResource(R.string.day_streak_label),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = 8.sp,
-                        lineHeight = 8.sp
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
             Box {
                 Icon(
                     imageVector = Icons.Default.NotificationsNone,
@@ -181,6 +149,7 @@ fun SelectorButton(
 
 @Composable
 fun HeroBanner(
+    studentName: String? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -208,7 +177,7 @@ fun HeroBanner(
             ) {
                 Column {
                     Text(
-                        text = stringResource(R.string.hero_title),
+                        text = if (studentName.isNullOrBlank()) stringResource(R.string.hero_title) else "Hello, $studentName! 👋",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Black,
                         color = Color.White

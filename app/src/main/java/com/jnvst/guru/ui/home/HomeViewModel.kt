@@ -21,19 +21,62 @@ class HomeViewModel(
     init {
         loadMockData()
         loadRealProgressData()
+        loadProfileData()
+        loadLatestAttempt()
+    }
+
+    private fun loadProfileData() {
+        viewModelScope.launch {
+            when (val result = repository.getStudentProfile()) {
+                is Resource.Success -> {
+                    _uiState.update { it.copy(studentName = result.data?.name) }
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun loadLatestAttempt() {
+        viewModelScope.launch {
+            // We need to fetch the most recent activity.
+            // Since we don't have a direct "get absolute latest" without parameters in repository right now,
+            // let's look at recent attempts from progress if available, or try to infer.
+            // Actually, the prompt says "Use existing GET /api/v1/student/practice-attempts/latest".
+            // But the repository method requires parameters.
+            
+            // Looking at repository, progress API returns recentAttempts. Let's use the first one from there.
+            val progressResult = repository.getProgress(0, 1)
+            if (progressResult is Resource.Success) {
+                val latest = progressResult.data?.recentAttempts?.firstOrNull()
+                if (latest != null) {
+                    _uiState.update {
+                        it.copy(
+                            continuePractice = ContinuePracticeUiState(
+                                subjectName = latest.subject.replace("_", " ").capitalize(),
+                                topicName = latest.displayTitle ?: "",
+                                completedQuestions = latest.correctCount + latest.wrongCount,
+                                totalQuestions = latest.questionCount
+                            ),
+                            latestAttemptData = LatestAttemptUiState(
+                                mode = latest.practiceMode,
+                                subject = latest.subject,
+                                topic = latest.topic,
+                                topicId = latest.topicId,
+                                difficulty = latest.difficulty ?: "EASY",
+                                language = latest.language,
+                                page = latest.page
+                            )
+                        )
+                    }
+                }
+            }
+        }
     }
 
     private fun loadMockData() {
         _uiState.update {
             it.copy(
-                streakCount = 12,
                 notificationCount = 3,
-                continuePractice = ContinuePracticeUiState(
-                    subjectName = "Mathematics",
-                    topicName = "Algebraic Expressions",
-                    completedQuestions = 12,
-                    totalQuestions = 20
-                ),
                 progressSummary = ProgressSummaryUiState(
                     questionsSolved = 120,
                     averageAccuracy = 85,

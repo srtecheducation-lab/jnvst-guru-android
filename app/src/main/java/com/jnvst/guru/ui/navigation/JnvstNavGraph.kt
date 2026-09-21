@@ -153,7 +153,17 @@ fun JnvstNavGraph(
         composable(Screen.Home.route) {
             HomeScreen(
                 onSubjectWisePracticeClick = { navController.navigate(Screen.SubjectSelection.createRoute("subject")) },
-                onTopicWisePracticeClick = { navController.navigate(Screen.Practice.route) }
+                onTopicWisePracticeClick = { navController.navigate(Screen.Practice.route) },
+                onContinuePracticeClick = { attempt ->
+                    navController.navigate(
+                        Screen.SetSelection.createRoute(
+                            mode = attempt.mode.lowercase(),
+                            subjectId = attempt.subject.lowercase(),
+                            difficulty = attempt.difficulty,
+                            topicId = attempt.topicId?.toString() ?: attempt.topic
+                        )
+                    )
+                }
             )
         }
 

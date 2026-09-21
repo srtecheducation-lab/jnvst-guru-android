@@ -15,6 +15,7 @@ import com.jnvst.guru.ui.components.*
 fun HomeScreen(
     onSubjectWisePracticeClick: () -> Unit,
     onTopicWisePracticeClick: () -> Unit,
+    onContinuePracticeClick: (LatestAttemptUiState) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -26,7 +27,6 @@ fun HomeScreen(
             .statusBarsPadding()
     ) {
         AppHeader(
-            streakCount = uiState.streakCount,
             notificationCount = uiState.notificationCount
         )
         
@@ -43,13 +43,15 @@ fun HomeScreen(
             }
 
             item {
-                HeroBanner()
+                HeroBanner(studentName = uiState.studentName)
             }
 
             item {
                 ContinuePracticeCard(
                     state = uiState.continuePractice,
-                    onContinueClick = { /* TODO */ }
+                    onContinueClick = { 
+                        uiState.latestAttemptData?.let { onContinuePracticeClick(it) }
+                    }
                 )
             }
 

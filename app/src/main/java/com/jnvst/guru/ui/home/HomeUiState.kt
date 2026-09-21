@@ -1,12 +1,22 @@
 package com.jnvst.guru.ui.home
 
 data class HomeUiState(
-    val slogan: String = "",
-    val streakCount: Int = 0,
     val notificationCount: Int = 0,
+    val studentName: String? = null,
     val continuePractice: ContinuePracticeUiState? = null,
+    val latestAttemptData: LatestAttemptUiState? = null,
     val progressSummary: ProgressSummaryUiState = ProgressSummaryUiState(),
     val isLoading: Boolean = false
+)
+
+data class LatestAttemptUiState(
+    val mode: String,
+    val subject: String,
+    val topic: String?,
+    val topicId: Long?,
+    val difficulty: String,
+    val language: String?,
+    val page: Int
 )
 
 data class ContinuePracticeUiState(
