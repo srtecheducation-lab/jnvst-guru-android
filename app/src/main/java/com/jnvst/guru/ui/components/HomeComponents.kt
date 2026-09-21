@@ -378,12 +378,6 @@ fun ProgressSummarySection(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Black
             )
-            Text(
-                text = stringResource(R.string.time_filter_week),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
-            )
         }
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -405,19 +399,15 @@ fun ProgressSummarySection(
                 tint = BrandIndigo
             )
             ProgressItem(
-                label = stringResource(R.string.study_time),
-                value = stringResource(
-                    R.string.study_time_format,
-                    state.studyTimeMinutes / 60,
-                    state.studyTimeMinutes % 60
-                ),
-                icon = Icons.Default.AccessTime,
+                label = stringResource(R.string.label_sets_completed),
+                value = state.setsCompleted.toString(),
+                icon = Icons.Default.TaskAlt,
                 tint = BrandAmber
             )
             ProgressItem(
-                label = stringResource(R.string.current_streak),
-                value = state.currentStreak.toString(),
-                icon = Icons.Default.LocalFireDepartment,
+                label = stringResource(R.string.label_topics_practiced),
+                value = state.topicsPracticed.toString(),
+                icon = Icons.Default.Category,
                 tint = Color(0xFF9575CD)
             )
         }

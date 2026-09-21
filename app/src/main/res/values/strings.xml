@@ -24,6 +24,8 @@
     <string name="average_accuracy">Average\nAccuracy</string>
     <string name="study_time">Study\nTime</string>
     <string name="current_streak">Day\nStreak</string>
+    <string name="label_sets_completed">Sets\nCompleted</string>
+    <string name="label_topics_practiced">Topics\nPracticed</string>
 
     <string name="streak_days">%1$d</string>
     <string name="percentage_format">%1$d%%</string>

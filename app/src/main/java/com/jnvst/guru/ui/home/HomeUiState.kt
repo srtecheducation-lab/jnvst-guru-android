@@ -20,6 +20,6 @@ data class ContinuePracticeUiState(
 data class ProgressSummaryUiState(
     val questionsSolved: Int = 0,
     val averageAccuracy: Int = 0,
-    val studyTimeMinutes: Int = 0,
-    val currentStreak: Int = 0
+    val setsCompleted: Int = 0,
+    val topicsPracticed: Int = 0
 )
