@@ -7,5 +7,6 @@ interface AuthRepository {
     fun isLoggedIn(): Boolean
     suspend fun login(email: String, password: String): Result<Unit>
     suspend fun signUp(email: String, password: String): Result<Unit>
+    suspend fun loginWithIdToken(idToken: String): Result<Unit>
     suspend fun logout()
 }

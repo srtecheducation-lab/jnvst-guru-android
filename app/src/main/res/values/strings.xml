@@ -168,6 +168,7 @@
     <string name="label_email">Email Address</string>
     <string name="label_password">Password</string>
     <string name="btn_login">Login</string>
+    <string name="btn_google_sign_in">Continue with Google</string>
     <string name="error_empty_fields">Email and password cannot be empty</string>
     <string name="signup_title">Create Account</string>
     <string name="signup_subtitle">Join JNVST GURU today</string>

@@ -56,6 +56,18 @@ class LoginViewModel(
             }
         }
     }
+
+    fun loginWithIdToken(idToken: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            val result = authRepository.loginWithIdToken(idToken)
+            result.onSuccess {
+                _uiState.update { it.copy(isLoading = false, isLoginSuccessful = true) }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, error = error.message ?: "Google Sign-In failed") }
+            }
+        }
+    }
     
     fun checkSession(): Boolean {
         return authRepository.isLoggedIn()

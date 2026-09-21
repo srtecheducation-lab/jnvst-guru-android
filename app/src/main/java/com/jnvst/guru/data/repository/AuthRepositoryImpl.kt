@@ -3,6 +3,8 @@ package com.jnvst.guru.data.repository
 import com.jnvst.guru.data.network.SupabaseClient
 import com.jnvst.guru.domain.repository.AuthRepository
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.IDToken
+import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +37,18 @@ class AuthRepositoryImpl : AuthRepository {
             SupabaseClient.client.auth.signUpWith(Email) {
                 this.email = email
                 this.password = password
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun loginWithIdToken(idToken: String): Result<Unit> {
+        return try {
+            SupabaseClient.client.auth.signInWith(IDToken) {
+                this.idToken = idToken
+                this.provider = Google
             }
             Result.success(Unit)
         } catch (e: Exception) {
