@@ -60,7 +60,7 @@ fun ProfileScreenContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FE))
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
     ) {
         CenterAlignedTopAppBar(
@@ -69,7 +69,7 @@ fun ProfileScreenContent(
                     text = stringResource(R.string.nav_profile),
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
-                    color = Color(0xFF1C1B1F)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             navigationIcon = {
@@ -77,12 +77,12 @@ fun ProfileScreenContent(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = Color(0xFF1C1B1F)
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFF8F9FE)
+                containerColor = MaterialTheme.colorScheme.background
             )
         )
 
@@ -93,7 +93,7 @@ fun ProfileScreenContent(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF5B49D8))
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             val profile = uiState.profile
@@ -145,8 +145,8 @@ fun ProfileHeaderCard(
 ) {
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(
-            Color(0xFFECE8FF),
-            Color(0xFFF3EEFF)
+            Color(0xFF232038),
+            Color(0xFF2B2648)
         )
     )
 
@@ -154,7 +154,7 @@ fun ProfileHeaderCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        border = BorderStroke(1.dp, Color(0xFFE2DCFF))
+        border = BorderStroke(1.dp, Color(0xFF38325C))
     ) {
         Box(
             modifier = Modifier
@@ -170,13 +170,13 @@ fun ProfileHeaderCard(
                     modifier = Modifier
                         .size(72.dp)
                         .clip(CircleShape)
-                        .background(Color.White),
+                        .background(Color(0xFF201D33)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        tint = Color(0xFF5B49D8),
+                        tint = Color(0xFF9FA8DA),
                         modifier = Modifier.size(44.dp)
                     )
                 }
@@ -191,7 +191,7 @@ fun ProfileHeaderCard(
                         text = profile?.name ?: "Student",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1D1B20)
+                        color = Color.White
                     )
 
                     Row(
@@ -201,13 +201,13 @@ fun ProfileHeaderCard(
                         Icon(
                             imageVector = Icons.Default.Email,
                             contentDescription = null,
-                            tint = Color(0xFF6B5ECE),
+                            tint = Color(0xFFB0A8ED),
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = email ?: "No email available",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF6B5ECE),
+                            color = Color(0xFFB0A8ED),
                             fontSize = 13.sp
                         )
                     }
@@ -215,7 +215,7 @@ fun ProfileHeaderCard(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Surface(
-                        color = Color(0xFFDFDAFF),
+                        color = Color(0xFF352F5A),
                         shape = CircleShape
                     ) {
                         Row(
@@ -226,12 +226,12 @@ fun ProfileHeaderCard(
                             Icon(
                                 imageVector = Icons.Default.School,
                                 contentDescription = null,
-                                tint = Color(0xFF4A3E9F),
+                                tint = Color(0xFF9FA8DA),
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
                                 text = "Class ${profile?.classLevel ?: 6}",
-                                color = Color(0xFF4A3E9F),
+                                color = Color(0xFF9FA8DA),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold
                             )
@@ -248,8 +248,8 @@ fun StudentDetailsCard(profile: StudentProfile?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFF0EFF8))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2C)),
+        border = BorderStroke(1.dp, Color(0xFF2C2C3E))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -264,13 +264,13 @@ fun StudentDetailsCard(profile: StudentProfile?) {
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFF0EDFF)),
+                        .background(Color(0xFF282540)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
-                        tint = Color(0xFF5B49D8),
+                        tint = Color(0xFF9FA8DA),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -278,7 +278,7 @@ fun StudentDetailsCard(profile: StudentProfile?) {
                     text = "Student Details",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1C1B1F)
+                    color = Color.White
                 )
             }
 
@@ -316,7 +316,7 @@ fun StudentDetailsCard(profile: StudentProfile?) {
                     modifier = Modifier
                         .height(160.dp)
                         .width(1.dp)
-                        .background(Color(0xFFF0EFF8))
+                        .background(Color(0xFF2C2C3E))
                 )
 
                 // Right Column: State, District
@@ -360,13 +360,13 @@ fun DetailItem(
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFF0EDFF)),
+                .background(Color(0xFF282540)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color(0xFF5B49D8),
+                tint = Color(0xFF9FA8DA),
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -375,13 +375,13 @@ fun DetailItem(
             Text(
                 text = label,
                 fontSize = 12.sp,
-                color = Color(0xFF78757E)
+                color = Color(0xFFA09CBA)
             )
             Text(
                 text = value,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1C1B1F)
+                color = Color.White
             )
         }
     }
@@ -397,8 +397,8 @@ fun PreferencesCard(profile: StudentProfile?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFF0EFF8))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2C)),
+        border = BorderStroke(1.dp, Color(0xFF2C2C3E))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -413,13 +413,13 @@ fun PreferencesCard(profile: StudentProfile?) {
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFE8F1FF)),
+                        .background(Color(0xFF1D2B42)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Language,
                         contentDescription = null,
-                        tint = Color(0xFF2B78E4),
+                        tint = Color(0xFF64B5F6),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -427,7 +427,7 @@ fun PreferencesCard(profile: StudentProfile?) {
                     text = "Preferences",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1C1B1F)
+                    color = Color.White
                 )
             }
 
@@ -435,7 +435,7 @@ fun PreferencesCard(profile: StudentProfile?) {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFF8F9FE)
+                color = Color(0xFF161622)
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
@@ -446,13 +446,13 @@ fun PreferencesCard(profile: StudentProfile?) {
                         modifier = Modifier
                             .size(40.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFE5EFFE)),
+                            .background(Color(0xFF1D2B42)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Translate,
                             contentDescription = null,
-                            tint = Color(0xFF2B78E4),
+                            tint = Color(0xFF64B5F6),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -461,13 +461,13 @@ fun PreferencesCard(profile: StudentProfile?) {
                         Text(
                             text = "Language",
                             fontSize = 12.sp,
-                            color = Color(0xFF78757E)
+                            color = Color(0xFFA09CBA)
                         )
                         Text(
                             text = languageDisplayName,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1C1B1F)
+                            color = Color.White
                         )
                     }
                 }
@@ -481,8 +481,8 @@ fun AchievementsCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFF0EFF8))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2C)),
+        border = BorderStroke(1.dp, Color(0xFF2C2C3E))
     ) {
         Row(
             modifier = Modifier
@@ -494,13 +494,13 @@ fun AchievementsCard() {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF0EDFF)),
+                    .background(Color(0xFF282540)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.EmojiEvents,
                     contentDescription = null,
-                    tint = Color(0xFF5B49D8),
+                    tint = Color(0xFF9FA8DA),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -512,25 +512,25 @@ fun AchievementsCard() {
                     text = "Achievements",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1C1B1F)
+                    color = Color.White
                 )
                 Text(
                     text = "Coming Soon",
                     fontSize = 12.sp,
-                    color = Color(0xFF78757E)
+                    color = Color(0xFFA09CBA)
                 )
             }
 
             Surface(
                 shape = CircleShape,
-                color = Color(0xFFECEBFF)
+                color = Color(0xFF352F5A)
             ) {
                 Text(
                     text = "Coming Soon",
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF5B49D8)
+                    color = Color(0xFF9FA8DA)
                 )
             }
         }
@@ -542,8 +542,8 @@ fun SettingsCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFF0EFF8))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2C)),
+        border = BorderStroke(1.dp, Color(0xFF2C2C3E))
     ) {
         Row(
             modifier = Modifier
@@ -555,13 +555,13 @@ fun SettingsCard() {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFE8F5E9)),
+                    .background(Color(0xFF1B382A)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = null,
-                    tint = Color(0xFF2E7D32),
+                    tint = Color(0xFF81C784),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -572,14 +572,14 @@ fun SettingsCard() {
                 text = "Settings",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF1C1B1F),
+                color = Color.White,
                 modifier = Modifier.weight(1f)
             )
 
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color(0xFF78757E)
+                tint = Color(0xFFA09CBA)
             )
         }
     }
@@ -591,8 +591,8 @@ fun LogoutButton(onLogout: () -> Unit) {
         onClick = onLogout,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F3)),
-        border = BorderStroke(1.dp, Color(0xFFFFD5DD))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2C161A)),
+        border = BorderStroke(1.dp, Color(0xFF522228))
     ) {
         Row(
             modifier = Modifier
@@ -604,7 +604,7 @@ fun LogoutButton(onLogout: () -> Unit) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Logout,
                 contentDescription = null,
-                tint = Color(0xFFE53935),
+                tint = Color(0xFFFF8A80),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -612,7 +612,7 @@ fun LogoutButton(onLogout: () -> Unit) {
                 text = stringResource(R.string.label_logout),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFE53935)
+                color = Color(0xFFFF8A80)
             )
         }
     }

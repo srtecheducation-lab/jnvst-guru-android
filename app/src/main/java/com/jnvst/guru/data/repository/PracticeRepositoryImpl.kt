@@ -1,7 +1,11 @@
 package com.jnvst.guru.data.repository
 
+import com.jnvst.guru.JnvstApplication
 import com.jnvst.guru.R
+import com.jnvst.guru.data.local.StudentProfileLocalDataSource
 import com.jnvst.guru.data.network.NetworkModule
+import com.jnvst.guru.data.network.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import com.jnvst.guru.data.network.dto.AnswerRequestDto
 import com.jnvst.guru.data.network.dto.PracticeAttemptRequestDto
 import com.jnvst.guru.data.network.dto.LanguageQuestionDto
@@ -13,11 +17,28 @@ import com.jnvst.guru.data.network.util.MatImageUrlBuilder
 import com.jnvst.guru.domain.model.*
 import com.jnvst.guru.domain.repository.PracticeRepository
 import com.jnvst.guru.domain.util.Resource
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 class PracticeRepositoryImpl : PracticeRepository {
+
+    companion object {
+        private var cachedProfileUserId: String? = null
+        private var inMemoryProfile: StudentProfile? = null
+        private var inMemoryProgress: ProgressResponse? = null
+
+        private val localDataSource by lazy {
+            StudentProfileLocalDataSource(JnvstApplication.appContext)
+        }
+
+        fun getCurrentUserId(): String? {
+            return SupabaseClient.client.auth.currentSessionOrNull()?.user?.id
+                ?: SupabaseClient.client.auth.currentUserOrNull()?.id
+        }
+    }
 
     private var cachedMatTopics: List<Topic> = emptyList()
 
@@ -371,10 +392,26 @@ class PracticeRepositoryImpl : PracticeRepository {
         }
     }
 
-    override suspend fun getStudentProfile(): Resource<StudentProfile> {
+    override suspend fun getStudentProfile(forceRefresh: Boolean): Resource<StudentProfile> {
+        val currentUserId = getCurrentUserId()
+            ?: return Resource.Error("User not authenticated")
+
+        if (!forceRefresh && cachedProfileUserId == currentUserId && inMemoryProfile != null) {
+            return Resource.Success(inMemoryProfile!!)
+        }
+
+        if (!forceRefresh) {
+            val localProfile = localDataSource.getProfile(currentUserId)
+            if (localProfile != null) {
+                cachedProfileUserId = currentUserId
+                inMemoryProfile = localProfile
+                return Resource.Success(localProfile)
+            }
+        }
+
         return try {
             val dto = NetworkModule.arithmeticService.getStudentProfile()
-            Resource.Success(StudentProfile(
+            val profile = StudentProfile(
                 exists = dto.exists,
                 id = dto.id,
                 userId = dto.userId,
@@ -391,10 +428,57 @@ class PracticeRepositoryImpl : PracticeRepository {
                 preferredLanguage = dto.preferredLanguage,
                 examSessionId = dto.examSessionId,
                 examSessionName = dto.examSession?.sessionName
-            ))
+            )
+
+            cachedProfileUserId = currentUserId
+            inMemoryProfile = profile
+            localDataSource.saveProfile(currentUserId, profile)
+
+            Resource.Success(profile)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to fetch student profile")
+            val localProfile = localDataSource.getProfile(currentUserId)
+            if (localProfile != null) {
+                cachedProfileUserId = currentUserId
+                inMemoryProfile = localProfile
+                Resource.Success(localProfile)
+            } else {
+                Resource.Error(e.message ?: "Failed to fetch student profile")
+            }
         }
+    }
+
+    override suspend fun preloadStartupData(): Resource<Unit> = coroutineScope {
+        val currentUserId = getCurrentUserId()
+            ?: return@coroutineScope Resource.Error("User not authenticated")
+
+        val profileDeferred = async { getStudentProfile(forceRefresh = true) }
+        val progressDeferred = async { getProgress(recentPage = 0, recentLimit = 20) }
+
+        val profileResult = profileDeferred.await()
+        val progressResult = progressDeferred.await()
+
+        if (profileResult is Resource.Success || progressResult is Resource.Success) {
+            Resource.Success(Unit)
+        } else {
+            val cachedProfile = localDataSource.getProfile(currentUserId)
+            if (cachedProfile != null) {
+                cachedProfileUserId = currentUserId
+                inMemoryProfile = cachedProfile
+                Resource.Success(Unit)
+            } else {
+                Resource.Error(profileResult.message ?: progressResult.message ?: "Failed to load startup data")
+            }
+        }
+    }
+
+    override fun clearProfileCache() {
+        val currentUserId = getCurrentUserId()
+        if (currentUserId != null) {
+            localDataSource.clearProfile(currentUserId)
+        }
+        cachedProfileUserId = null
+        inMemoryProfile = null
+        inMemoryProgress = null
     }
 
     override suspend fun createStudentProfile(
@@ -562,9 +646,14 @@ class PracticeRepositoryImpl : PracticeRepository {
                     )
                 }
             )
+            inMemoryProgress = response
             Resource.Success(response)
         } catch (e: Exception) {
-            Resource.Error(e.message ?: "Failed to fetch progress")
+            if (inMemoryProgress != null) {
+                Resource.Success(inMemoryProgress!!)
+            } else {
+                Resource.Error(e.message ?: "Failed to fetch progress")
+            }
         }
     }
 }

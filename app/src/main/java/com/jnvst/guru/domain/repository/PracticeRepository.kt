@@ -64,7 +64,11 @@ interface PracticeRepository {
         page: Int
     ): Resource<PracticeAttempt>
 
-    suspend fun getStudentProfile(): Resource<StudentProfile>
+    suspend fun getStudentProfile(forceRefresh: Boolean = false): Resource<StudentProfile>
+
+    suspend fun preloadStartupData(): Resource<Unit>
+
+    fun clearProfileCache()
 
     suspend fun createStudentProfile(
         name: String,

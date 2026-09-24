@@ -3,7 +3,9 @@ package com.jnvst.guru.ui.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jnvst.guru.data.repository.AuthRepositoryImpl
+import com.jnvst.guru.data.repository.PracticeRepositoryImpl
 import com.jnvst.guru.domain.repository.AuthRepository
+import com.jnvst.guru.domain.repository.PracticeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +13,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
-    private val authRepository: AuthRepository = AuthRepositoryImpl()
+    private val authRepository: AuthRepository = AuthRepositoryImpl(),
+    private val practiceRepository: PracticeRepository = PracticeRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -20,10 +23,19 @@ class LoginViewModel(
     init {
         viewModelScope.launch {
             authRepository.sessionStatus.collect { isAuthenticated ->
-                _uiState.update { it.copy(
-                    isInitializing = false,
-                    isLoginSuccessful = isAuthenticated
-                ) }
+                if (isAuthenticated) {
+                    _uiState.update { it.copy(isInitializing = true) }
+                    practiceRepository.preloadStartupData()
+                    _uiState.update { it.copy(
+                        isInitializing = false,
+                        isLoginSuccessful = true
+                    ) }
+                } else {
+                    _uiState.update { it.copy(
+                        isInitializing = false,
+                        isLoginSuccessful = false
+                    ) }
+                }
             }
         }
     }

@@ -27,7 +27,7 @@ class ProfileViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             val email = SupabaseClient.getCurrentUserEmail()
-            when (val result = repository.getStudentProfile()) {
+            when (val result = repository.getStudentProfile(forceRefresh = false)) {
                 is Resource.Success -> {
                     _uiState.update {
                         it.copy(

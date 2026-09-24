@@ -19,77 +19,19 @@ class HomeViewModel(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadMockData()
-        loadRealProgressData()
-        loadProfileData()
-        loadLatestAttempt()
+        loadData()
     }
 
-    private fun loadProfileData() {
+    private fun loadData() {
         viewModelScope.launch {
-            when (val result = repository.getStudentProfile()) {
+            when (val result = repository.getStudentProfile(forceRefresh = false)) {
                 is Resource.Success -> {
                     _uiState.update { it.copy(studentName = result.data?.name) }
                 }
                 else -> {}
             }
-        }
-    }
 
-    private fun loadLatestAttempt() {
-        viewModelScope.launch {
-            // We need to fetch the most recent activity.
-            // Since we don't have a direct "get absolute latest" without parameters in repository right now,
-            // let's look at recent attempts from progress if available, or try to infer.
-            // Actually, the prompt says "Use existing GET /api/v1/student/practice-attempts/latest".
-            // But the repository method requires parameters.
-            
-            // Looking at repository, progress API returns recentAttempts. Let's use the first one from there.
-            val progressResult = repository.getProgress(0, 1)
-            if (progressResult is Resource.Success) {
-                val latest = progressResult.data?.recentAttempts?.firstOrNull()
-                if (latest != null) {
-                    _uiState.update {
-                        it.copy(
-                            continuePractice = ContinuePracticeUiState(
-                                subjectName = latest.subject.replace("_", " ").capitalize(),
-                                topicName = latest.displayTitle ?: "",
-                                completedQuestions = latest.correctCount + latest.wrongCount,
-                                totalQuestions = latest.questionCount
-                            ),
-                            latestAttemptData = LatestAttemptUiState(
-                                mode = latest.practiceMode,
-                                subject = latest.subject,
-                                topic = latest.topic,
-                                topicId = latest.topicId,
-                                difficulty = latest.difficulty ?: "EASY",
-                                language = latest.language,
-                                page = latest.page
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private fun loadMockData() {
-        _uiState.update {
-            it.copy(
-                notificationCount = 3,
-                progressSummary = ProgressSummaryUiState(
-                    questionsSolved = 120,
-                    averageAccuracy = 85,
-                    setsCompleted = 4,
-                    topicsPracticed = 2
-                )
-            )
-        }
-    }
-
-    private fun loadRealProgressData() {
-        viewModelScope.launch {
-            when (val result = repository.getProgress(0, 100)) {
+            when (val result = repository.getProgress(0, 20)) {
                 is Resource.Success -> {
                     val progressData = result.data
                     if (progressData != null) {
@@ -105,21 +47,41 @@ class HomeViewModel(
                             .distinct()
                             .size
 
+                        val latest = progressData.recentAttempts.firstOrNull()
+
                         _uiState.update {
                             it.copy(
+                                notificationCount = 3,
                                 progressSummary = ProgressSummaryUiState(
                                     questionsSolved = qSolved,
                                     averageAccuracy = avgAccuracy,
                                     setsCompleted = uniqueSets,
                                     topicsPracticed = uniqueTopics
-                                )
+                                ),
+                                continuePractice = if (latest != null) {
+                                    ContinuePracticeUiState(
+                                        subjectName = latest.subject.replace("_", " ").lowercase().replaceFirstChar { char -> char.uppercase() },
+                                        topicName = latest.displayTitle ?: "",
+                                        completedQuestions = latest.correctCount + latest.wrongCount,
+                                        totalQuestions = latest.questionCount
+                                    )
+                                } else it.continuePractice,
+                                latestAttemptData = if (latest != null) {
+                                    LatestAttemptUiState(
+                                        mode = latest.practiceMode,
+                                        subject = latest.subject,
+                                        topic = latest.topic,
+                                        topicId = latest.topicId,
+                                        difficulty = latest.difficulty ?: "EASY",
+                                        language = latest.language,
+                                        page = latest.page
+                                    )
+                                } else it.latestAttemptData
                             )
                         }
                     }
                 }
-                else -> {
-                    // Retain defaults/mock if failed or loading
-                }
+                else -> {}
             }
         }
     }

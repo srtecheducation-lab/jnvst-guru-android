@@ -100,7 +100,6 @@ fun JnvstNavGraph(
 
     androidx.compose.runtime.LaunchedEffect(uiState.isLoginSuccessful) {
         if (uiState.isLoginSuccessful) {
-            practiceViewModel.loadStudentProfile()
             practiceViewModel.loadMatTopicsMetadata()
             progressViewModel.loadProgress()
         }

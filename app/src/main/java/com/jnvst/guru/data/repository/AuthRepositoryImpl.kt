@@ -58,6 +58,7 @@ class AuthRepositoryImpl : AuthRepository {
 
     override suspend fun logout() {
         try {
+            PracticeRepositoryImpl().clearProfileCache()
             SupabaseClient.client.auth.signOut()
         } catch (_: Exception) {
         }
