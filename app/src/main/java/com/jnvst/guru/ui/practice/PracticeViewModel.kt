@@ -82,6 +82,19 @@ class PracticeViewModel(
     init {
         loadSubjects()
         loadMockTests()
+        loadStudentProfile()
+    }
+
+    private suspend fun getPreferredLanguageApiCode(): String {
+        val currentProfile = _studentProfile.value?.data ?: run {
+            val res = repository.getStudentProfile(forceRefresh = false)
+            if (res is Resource.Success) {
+                _studentProfile.value = res
+                res.data
+            } else null
+        }
+        val langCode = currentProfile?.preferredLanguage?.lowercase() ?: "en"
+        return if (langCode == "bn" || langCode == "bengali") "BENGALI" else "ENGLISH"
     }
 
     fun loadMatTopicsMetadata() {
@@ -124,8 +137,7 @@ class PracticeViewModel(
                 }
             } else if (subjectId.equals("language", ignoreCase = true)) {
                 practiceMetadata = PracticeMetadata(mode, subjectId, topicId, difficulty, page)
-                val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-                val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+                val apiLanguage = getPreferredLanguageApiCode()
                 
                 val result = repository.getLanguageQuestions(apiLanguage, page, 4)
                 if (result is Resource.Success) {
@@ -157,11 +169,7 @@ class PracticeViewModel(
                 _currentTopic.value = _topics.value.find { it.id == topicId }
                 practiceMetadata = PracticeMetadata(mode, subjectId, type, difficulty, page)
 
-                val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-                val apiLanguage = when (languageCode.lowercase()) {
-                    "bn" -> "BENGALI"
-                    else -> "ENGLISH"
-                }
+                val apiLanguage = getPreferredLanguageApiCode()
 
                 val result = repository.getArithmeticQuestions(
                     type = type,
@@ -245,8 +253,7 @@ class PracticeViewModel(
                 metadata.topicType to null
             }
 
-            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+            val apiLanguage = getPreferredLanguageApiCode()
 
             val result = repository.submitPracticeAttempt(
                 mode = metadata.mode,
@@ -281,8 +288,7 @@ class PracticeViewModel(
                 type to null
             }
             
-            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+            val apiLanguage = getPreferredLanguageApiCode()
 
             _setStatuses.value = repository.getPracticeStatus(mode, subjectId, type, tId, difficulty, apiLanguage)
         }
@@ -307,13 +313,7 @@ class PracticeViewModel(
                 type to null
             }
             
-            // Check if Language to add language parameter?
-            // Existing repository.getLatestAttempt:
-            // suspend fun getLatestAttempt(mode: String, subject: String, topic: String?, topicId: Long?, difficulty: String, page: Int): Resource<PracticeAttempt>
-            // I should update it to support language.
-            
-            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+            val apiLanguage = getPreferredLanguageApiCode()
 
             _latestAttempt.value = repository.getLatestAttempt(mode, subjectId, type, tId, difficulty, apiLanguage, page)
         }
@@ -327,8 +327,7 @@ class PracticeViewModel(
         _currentQuestionIndex.value = 0
         
         viewModelScope.launch {
-            val languageCode = _studentProfile.value?.data?.preferredLanguage ?: "en"
-            val apiLanguage = if (languageCode.lowercase() == "bn") "BENGALI" else "ENGLISH"
+            val apiLanguage = getPreferredLanguageApiCode()
 
             // Ensure metadata is loaded for MAT
             if (subjectId.equals("mat", ignoreCase = true) && _matTopicsMetadata.value.isEmpty()) {
