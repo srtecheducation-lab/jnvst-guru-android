@@ -23,4 +23,13 @@ object SupabaseClient {
     fun getAccessToken(): String? {
         return client.auth.currentSessionOrNull()?.accessToken
     }
+
+    /**
+     * Retrieves the current authenticated user's email.
+     * Returns null if no user is authenticated.
+     */
+    fun getCurrentUserEmail(): String? {
+        return client.auth.currentSessionOrNull()?.user?.email
+            ?: client.auth.currentUserOrNull()?.email
+    }
 }
