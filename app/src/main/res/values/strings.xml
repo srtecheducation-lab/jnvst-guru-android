@@ -20,7 +20,7 @@
     <!-- Progress Summary -->
     <string name="progress_summary_title">Your Progress</string>
     <string name="time_filter_week">This Week</string>
-    <string name="questions_solved">Questions\nSolved</string>
+    <string name="questions_solved">Questions\nAttempted</string>
     <string name="average_accuracy">Average\nAccuracy</string>
     <string name="study_time">Study\nTime</string>
     <string name="current_streak">Day\nStreak</string>

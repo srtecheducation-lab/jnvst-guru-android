@@ -39,6 +39,10 @@ fun ProgressScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     val progressResource by viewModel.progress.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.loadProgress()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

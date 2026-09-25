@@ -311,6 +311,7 @@ class PracticeRepositoryImpl : PracticeRepository {
                 answers = answerDtos
             )
             val response = NetworkModule.arithmeticService.submitPracticeAttempt(request)
+            inMemoryProgress = null
             val result = PracticeResult(
                 score = response.score,
                 questionCount = response.questionCount,

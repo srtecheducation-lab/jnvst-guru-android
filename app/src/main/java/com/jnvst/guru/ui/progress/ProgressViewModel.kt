@@ -20,7 +20,9 @@ class ProgressViewModel(
 
     fun loadProgress() {
         viewModelScope.launch {
-            _progress.value = Resource.Loading()
+            if (_progress.value.data == null) {
+                _progress.value = Resource.Loading()
+            }
             _progress.value = repository.getProgress(0, 20)
         }
     }
