@@ -24,6 +24,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.jnvst.guru.BuildConfig
+import android.util.Log
 
 @Composable
 fun LoginScreen(
@@ -121,6 +122,7 @@ fun LoginScreen(
 
         OutlinedButton(
             onClick = {
+                Log.d("GoogleSignIn", "Google Web Client ID configured: ${BuildConfig.GOOGLE_WEB_CLIENT_ID.isNotBlank()}")
                 val credentialManager = CredentialManager.create(context)
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
@@ -144,7 +146,8 @@ fun LoginScreen(
                             val idToken = googleIdTokenCredential.idToken
                             viewModel.loginWithIdToken(idToken)
                         }
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        Log.e("GoogleSignIn", "CredentialManager failed: ${e.javaClass.simpleName} - ${e.message}", e)
                     }
                 }
             },
