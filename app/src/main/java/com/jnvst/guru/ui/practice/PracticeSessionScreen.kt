@@ -328,21 +328,45 @@ fun QuestionContent(
         }
 
         if (!question.questionImageUrl.isNullOrEmpty()) {
+            val isReducedQuestionImage = when (question.topicCode) {
+                "ODD_ONE_OUT",
+                "FIGURE_MATCHING",
+                "FIGURE_COMPLETION" -> true
+                else -> false
+            }
+            val questionImageHeight = if (isReducedQuestionImage) 130.dp else 160.dp
+
             item {
                 AsyncImage(
                     model = question.questionImageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(160.dp)
+                        .height(questionImageHeight)
                         .clip(RoundedCornerShape(12.dp)),
                     contentScale = androidx.compose.ui.layout.ContentScale.Fit
                 )
             }
         }
 
-        if ((question.topicCode == "ODD_ONE_OUT" || question.topicCode == "FIGURE_MATCHING" || question.topicCode == "FIGURE_COMPLETION") && !question.optionImageUrls.isNullOrEmpty()) {
-            // 2x2 Grid for ODD_ONE_OUT, FIGURE_MATCHING and FIGURE_COMPLETION
+        val is2x2GridTopic = when (question.topicCode) {
+            "ODD_ONE_OUT",
+            "FIGURE_MATCHING",
+            "FIGURE_COMPLETION",
+            "FIGURE_SERIES",
+            "FIGURE_ANALOGY",
+            "ANALOGY",
+            "PAPER_FOLDING",
+            "PAPER_FOLDING_PUNCHING",
+            "PUNCHED_HOLE_PATTERN",
+            "SPACE_VISUALIZATION",
+            "CUT_OUT_PIECES",
+            "CUTOUT_PIECES" -> true
+            else -> false
+        }
+
+        if (is2x2GridTopic && !question.optionImageUrls.isNullOrEmpty()) {
+            // 2x2 Grid for specified MAT topics
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -503,12 +527,20 @@ fun MatOptionCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             
+            val isReducedOptionImage = when (question.topicCode) {
+                "ODD_ONE_OUT",
+                "FIGURE_MATCHING",
+                "FIGURE_COMPLETION" -> true
+                else -> false
+            }
+            val optionImageHeight = if (isReducedOptionImage) 95.dp else 120.dp
+
             AsyncImage(
                 model = optionImageUrl,
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp),
+                    .height(optionImageHeight),
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
             
