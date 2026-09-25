@@ -2,6 +2,7 @@ package com.jnvst.guru.ui.home
 
 data class HomeUiState(
     val notificationCount: Int = 0,
+    val currentLanguage: String = "English",
     val studentName: String? = null,
     val continuePractice: ContinuePracticeUiState? = null,
     val latestAttemptData: LatestAttemptUiState? = null,

@@ -26,7 +26,14 @@ class HomeViewModel(
         viewModelScope.launch {
             when (val result = repository.getStudentProfile(forceRefresh = false)) {
                 is Resource.Success -> {
-                    _uiState.update { it.copy(studentName = result.data?.name) }
+                    val langCode = result.data?.preferredLanguage?.lowercase() ?: "en"
+                    val langDisplayName = if (langCode == "bn" || langCode == "bengali") "Bengali" else "English"
+                    _uiState.update {
+                        it.copy(
+                            studentName = result.data?.name,
+                            currentLanguage = langDisplayName
+                        )
+                    }
                 }
                 else -> {}
             }
@@ -51,7 +58,7 @@ class HomeViewModel(
 
                         _uiState.update {
                             it.copy(
-                                notificationCount = 3,
+                                notificationCount = 0,
                                 progressSummary = ProgressSummaryUiState(
                                     questionsSolved = qSolved,
                                     averageAccuracy = avgAccuracy,

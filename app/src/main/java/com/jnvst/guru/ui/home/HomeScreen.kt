@@ -38,7 +38,7 @@ fun HomeScreen(
             item {
                 SelectorBar(
                     currentClass = stringResource(R.string.class_6_label),
-                    currentLanguage = stringResource(R.string.language_english)
+                    currentLanguage = uiState.currentLanguage
                 )
             }
 
