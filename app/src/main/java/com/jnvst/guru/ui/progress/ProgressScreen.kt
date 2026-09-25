@@ -260,8 +260,25 @@ fun RecentActivitySection(attempts: List<RecentAttempt>) {
             Text("No recent activity found.", modifier = Modifier.padding(vertical = 16.dp), color = Color.Gray)
         } else {
             attempts.forEach { attempt ->
+                val title = attempt.displayTitle ?: when (attempt.subject.uppercase()) {
+                    "MAT" -> "Mental Ability"
+                    "LANGUAGE" -> "Language"
+                    else -> "Arithmetic"
+                }
+                val formattedDifficulty = when (attempt.difficulty?.uppercase()) {
+                    "MEDIUM" -> "Medium"
+                    "HARD" -> "Hard"
+                    else -> "Easy"
+                }
+                val subtitle = attempt.displaySubtitle ?: if (attempt.displayTopic != null) {
+                    "${attempt.displayTopic} • $formattedDifficulty • Set ${attempt.page + 1}"
+                } else {
+                    "$formattedDifficulty • Set ${attempt.page + 1}"
+                }
+
                 RecentActivityItem(
-                    title = attempt.displayTitle ?: "${attempt.subject} Set ${attempt.page + 1}",
+                    title = title,
+                    subtitle = subtitle,
                     time = attempt.submittedAt.substringBefore("T"),
                     score = "${attempt.score} / ${attempt.questionCount}",
                     scoreColor = if (attempt.correctCount > attempt.wrongCount) BrandEmerald else Color(0xFFFFA000)
@@ -272,7 +289,13 @@ fun RecentActivitySection(attempts: List<RecentAttempt>) {
 }
 
 @Composable
-fun RecentActivityItem(title: String, time: String, score: String, scoreColor: Color) {
+fun RecentActivityItem(
+    title: String,
+    subtitle: String,
+    time: String,
+    score: String,
+    scoreColor: Color
+) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         shape = RoundedCornerShape(16.dp),
@@ -285,6 +308,9 @@ fun RecentActivityItem(title: String, time: String, score: String, scoreColor: C
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(2.dp))
+                Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(2.dp))
                 Text(text = time, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
             Text(text = score, fontWeight = FontWeight.Black, color = scoreColor)

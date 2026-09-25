@@ -60,8 +60,8 @@ class HomeViewModel(
                                 ),
                                 continuePractice = if (latest != null) {
                                     ContinuePracticeUiState(
-                                        subjectName = latest.subject.replace("_", " ").lowercase().replaceFirstChar { char -> char.uppercase() },
-                                        topicName = latest.displayTitle ?: "",
+                                        subjectName = latest.displaySubject ?: latest.subject.replace("_", " ").lowercase().replaceFirstChar { char -> char.uppercase() },
+                                        topicName = latest.displayTopic ?: latest.displaySubtitle ?: "",
                                         completedQuestions = latest.correctCount + latest.wrongCount,
                                         totalQuestions = latest.questionCount
                                     )

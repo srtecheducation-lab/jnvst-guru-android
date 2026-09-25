@@ -611,6 +611,11 @@ class PracticeRepositoryImpl : PracticeRepository {
             // 2. Fetch Progress
             val dto = NetworkModule.arithmeticService.getProgress(recentPage, recentLimit)
 
+            val currentUserId = getCurrentUserId()
+            val profile = if (currentUserId != null) localDataSource.getProfile(currentUserId) ?: inMemoryProfile else inMemoryProfile
+            val lang = profile?.preferredLanguage?.lowercase() ?: "en"
+            val isBengali = lang == "bn" || lang == "bengali"
+
             // 3. Map to Domain
             val response = ProgressResponse(
                 overall = ProgressSummary(
@@ -638,11 +643,12 @@ class PracticeRepositoryImpl : PracticeRepository {
                     val displayName = if (t.subject == "MAT") {
                         cachedMatTopics.find { it.id == t.topicId.toString() }?.nameOverride ?: "Unknown MAT"
                     } else {
-                        // Arithmetic topics. We can map them based on enum or string codes if we have a localized map.
-                        // For now, let's use the code as is or look up from existing hardcoded list in repo.
-                        val arithTopic = topics["arithmetic"]?.find { it.id.uppercase() == t.topic?.uppercase() }
-                        arithTopic?.nameResId?.let { /* Resolving in UI? No, let's return name if possible */ }
-                        t.topic ?: "Unknown"
+                        val def = arithmeticTopicDefinitions.find { it.code.equals(t.topic, ignoreCase = true) }
+                        if (def != null) {
+                            if (isBengali) "${def.englishName} (${def.bengaliName})" else def.englishName
+                        } else {
+                            t.topic ?: "Unknown"
+                        }
                     }
                     TopicProgress(
                         subject = t.subject,
@@ -659,17 +665,46 @@ class PracticeRepositoryImpl : PracticeRepository {
                     )
                 },
                 recentAttempts = dto.recentAttempts.map { r ->
-                    val title = when (r.subject) {
-                        "MAT" -> {
-                            val topicName = cachedMatTopics.find { it.id == r.topicId.toString() }?.nameOverride ?: "MAT"
-                            "$topicName Set ${r.page + 1}"
-                        }
-                        "LANGUAGE" -> "Language Passage Set ${r.page + 1}"
-                        else -> {
-                            val topicName = topics["arithmetic"]?.find { it.id.uppercase() == r.topic?.uppercase() }?.id?.replace("_", " ")?.capitalize() ?: "Arithmetic"
-                            "$topicName Set ${r.page + 1}"
-                        }
+                    val subjectName = when (r.subject.uppercase()) {
+                        "MAT" -> "Mental Ability"
+                        "LANGUAGE" -> "Language"
+                        else -> "Arithmetic"
                     }
+
+                    val formattedDifficulty = when (r.difficulty?.uppercase()) {
+                        "MEDIUM" -> "Medium"
+                        "HARD" -> "Hard"
+                        else -> "Easy"
+                    }
+
+                    val setNumber = "Set ${r.page + 1}"
+
+                    val isTopicWise = r.practiceMode.equals("TOPIC", ignoreCase = true)
+
+                    val topicName = if (isTopicWise) {
+                        when (r.subject.uppercase()) {
+                            "MAT" -> {
+                                cachedMatTopics.find { it.id == r.topicId?.toString() }?.nameOverride
+                            }
+                            "ARITHMETIC" -> {
+                                val def = arithmeticTopicDefinitions.find { it.code.equals(r.topic, ignoreCase = true) }
+                                if (def != null) {
+                                    if (isBengali) "${def.englishName} (${def.bengaliName})" else def.englishName
+                                } else {
+                                    r.topic?.replace("_", " ")?.lowercase()?.split(" ")?.joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+                                }
+                            }
+                            "LANGUAGE" -> "Passage"
+                            else -> null
+                        }
+                    } else null
+
+                    val subtitle = if (isTopicWise && topicName != null) {
+                        "$topicName • $formattedDifficulty • $setNumber"
+                    } else {
+                        "$formattedDifficulty • $setNumber"
+                    }
+
                     RecentAttempt(
                         attemptId = r.attemptId,
                         practiceMode = r.practiceMode,
@@ -685,7 +720,12 @@ class PracticeRepositoryImpl : PracticeRepository {
                         wrongCount = r.wrongCount,
                         unansweredCount = r.unansweredCount,
                         submittedAt = r.submittedAt,
-                        displayTitle = title
+                        displaySubject = subjectName,
+                        displayTopic = topicName,
+                        displayDifficulty = formattedDifficulty,
+                        displaySet = setNumber,
+                        displayTitle = subjectName,
+                        displaySubtitle = subtitle
                     )
                 }
             )

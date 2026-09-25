@@ -57,5 +57,10 @@ data class RecentAttempt(
     val wrongCount: Int,
     val unansweredCount: Int,
     val submittedAt: String,
-    val displayTitle: String? = null // Resolved in Repository
+    val displaySubject: String? = null,
+    val displayTopic: String? = null,
+    val displayDifficulty: String? = null,
+    val displaySet: String? = null,
+    val displayTitle: String? = null, // Resolved in Repository
+    val displaySubtitle: String? = null
 )
