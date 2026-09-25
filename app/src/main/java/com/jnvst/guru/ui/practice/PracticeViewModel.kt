@@ -163,7 +163,7 @@ class PracticeViewModel(
                     "number_system" -> "NUMBER_SYSTEM"
                     "fractions" -> "FRACTION"
                     "decimals" -> "DECIMAL"
-                    else -> null
+                    else -> topicId?.uppercase()
                 }
                 
                 _currentTopic.value = _topics.value.find { it.id == topicId }
@@ -283,7 +283,7 @@ class PracticeViewModel(
                     "number_system" -> "NUMBER_SYSTEM"
                     "fractions" -> "FRACTION"
                     "decimals" -> "DECIMAL"
-                    else -> null
+                    else -> topicId?.uppercase()
                 }
                 type to null
             }
@@ -308,7 +308,7 @@ class PracticeViewModel(
                     "number_system" -> "NUMBER_SYSTEM"
                     "fractions" -> "FRACTION"
                     "decimals" -> "DECIMAL"
-                    else -> null
+                    else -> topicId?.uppercase()
                 }
                 type to null
             }
@@ -345,7 +345,7 @@ class PracticeViewModel(
                     "number_system" -> "NUMBER_SYSTEM"
                     "fractions" -> "FRACTION"
                     "decimals" -> "DECIMAL"
-                    else -> null
+                    else -> topicId?.uppercase()
                 }
             }
             

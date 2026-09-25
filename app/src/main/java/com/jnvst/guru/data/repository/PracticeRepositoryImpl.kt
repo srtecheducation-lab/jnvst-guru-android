@@ -40,6 +40,30 @@ class PracticeRepositoryImpl : PracticeRepository {
         }
     }
 
+    private data class ArithmeticTopicDefinition(
+        val code: String,
+        val englishName: String,
+        val bengaliName: String,
+        val questionCount: Int = 20,
+        val durationMinutes: Int = 30
+    )
+
+    private val arithmeticTopicDefinitions = listOf(
+        ArithmeticTopicDefinition("NUMBER_SYSTEM", "Number System", "সংখ্যা পদ্ধতি"),
+        ArithmeticTopicDefinition("FRACTION", "Fraction", "ভগ্নাংশ"),
+        ArithmeticTopicDefinition("DECIMAL", "Decimal", "দশমিক"),
+        ArithmeticTopicDefinition("ARITHMETIC_OPERATION", "Arithmetic Operations", "মৌলিক গাণিতিক ক্রিয়া"),
+        ArithmeticTopicDefinition("BODMAS", "Simplification (BODMAS)", "রাশির সরলীকরণ"),
+        ArithmeticTopicDefinition("FACTORS_MULTIPLES", "Factors and Multiples", "গুণনীয়ক ও গুণিতক"),
+        ArithmeticTopicDefinition("RATIO", "Ratio", "অনুপাত"),
+        ArithmeticTopicDefinition("PERCENTAGE", "Percentage", "শতকরা"),
+        ArithmeticTopicDefinition("PROFIT_LOSS", "Profit and Loss", "লাভ ও ক্ষতি"),
+        ArithmeticTopicDefinition("GEOMETRY", "Geometry", "জ্যামিতি"),
+        ArithmeticTopicDefinition("MENSURATION", "Mensuration", "পরিমিতি"),
+        ArithmeticTopicDefinition("DATA_INTERPRETATION", "Data Interpretation", "তথ্য বিশ্লেষণ"),
+        ArithmeticTopicDefinition("OTHER", "Other", "অন্যান্য")
+    )
+
     private var cachedMatTopics: List<Topic> = emptyList()
 
     private val subjects = listOf(
@@ -131,6 +155,24 @@ class PracticeRepositoryImpl : PracticeRepository {
                     durationMinutes = 60
                 )
             ))
+        } else if (subjectId.equals("arithmetic", ignoreCase = true)) {
+            val currentUserId = getCurrentUserId()
+            val profile = if (currentUserId != null) localDataSource.getProfile(currentUserId) ?: inMemoryProfile else inMemoryProfile
+            val lang = profile?.preferredLanguage?.lowercase() ?: "en"
+            val isBengali = lang == "bn" || lang == "bengali"
+
+            val topicList = arithmeticTopicDefinitions.map { def ->
+                val displayName = if (isBengali) "${def.englishName} (${def.bengaliName})" else def.englishName
+                Topic(
+                    id = def.code,
+                    subjectId = "arithmetic",
+                    code = def.code,
+                    nameOverride = displayName,
+                    questionCount = def.questionCount,
+                    durationMinutes = def.durationMinutes
+                )
+            }
+            emit(topicList)
         } else {
             emit(topics[subjectId] ?: emptyList())
         }
