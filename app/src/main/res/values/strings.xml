@@ -3,6 +3,7 @@
     <string name="app_slogan">Your Success, Our Mission ✨</string>
     <string name="class_6_label">Class 6</string>
     <string name="language_english">English</string>
+    <string name="language_bengali">Bengali</string>
 
     <!-- Header -->
     <string name="day_streak_label">Day Streak</string>

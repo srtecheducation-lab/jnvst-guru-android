@@ -1,7 +1,10 @@
 package com.jnvst.guru.ui.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,6 +52,17 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = "JNVST GURU Logo",
+            modifier = Modifier
+                .height(130.dp)
+                .fillMaxWidth(0.85f),
+            contentScale = ContentScale.Fit
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         Text(
             text = stringResource(R.string.login_title),
             style = MaterialTheme.typography.headlineMedium,

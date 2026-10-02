@@ -1,8 +1,11 @@
 package com.jnvst.guru.ui.profile
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +25,9 @@ fun CreateProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
 
     LaunchedEffect(uiState.profileCreated) {
         if (uiState.profileCreated) {
@@ -56,9 +62,54 @@ fun CreateProfileScreen(
                 value = uiState.dateOfBirth,
                 onValueChange = { viewModel.onFieldChange(dateOfBirth = it) },
                 label = { Text(stringResource(R.string.label_dob)) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("2014-05-15") }
+                placeholder = { Text("YYYY-MM-DD") },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = "Select Date of Birth"
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true }
             )
+
+            if (showDatePicker) {
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDatePicker = false
+                                datePickerState.selectedDateMillis?.let { millis ->
+                                    val calendar = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+                                    calendar.timeInMillis = millis
+                                    val formattedDate = String.format(
+                                        java.util.Locale.getDefault(),
+                                        "%04d-%02d-%02d",
+                                        calendar.get(java.util.Calendar.YEAR),
+                                        calendar.get(java.util.Calendar.MONTH) + 1,
+                                        calendar.get(java.util.Calendar.DAY_OF_MONTH)
+                                    )
+                                    viewModel.onFieldChange(dateOfBirth = formattedDate)
+                                }
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
 
             // Gender Dropdown
             DropdownField(
@@ -111,12 +162,42 @@ fun CreateProfileScreen(
             )
 
             // Preferred Language
-            DropdownField(
-                label = stringResource(R.string.label_language),
-                options = listOf("en", "bn"),
-                selectedOption = uiState.preferredLanguage,
-                onOptionSelected = { viewModel.onFieldChange(preferredLanguage = it) }
+            var languageExpanded by remember { mutableStateOf(false) }
+            val languageOptions = listOf("en", "bn")
+            val languageDisplayMap = mapOf(
+                "en" to stringResource(R.string.language_english),
+                "bn" to stringResource(R.string.language_bengali)
             )
+
+            ExposedDropdownMenuBox(
+                expanded = languageExpanded,
+                onExpandedChange = { languageExpanded = !languageExpanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedTextField(
+                    value = languageDisplayMap[uiState.preferredLanguage] ?: uiState.preferredLanguage,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.label_language)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = languageExpanded,
+                    onDismissRequest = { languageExpanded = false }
+                ) {
+                    languageOptions.forEach { langCode ->
+                        val displayLabel = languageDisplayMap[langCode] ?: langCode
+                        DropdownMenuItem(
+                            text = { Text(displayLabel) },
+                            onClick = {
+                                viewModel.onFieldChange(preferredLanguage = langCode)
+                                languageExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             // Exam Session
             OutlinedTextField(
