@@ -208,7 +208,8 @@ class PracticeRepositoryImpl : PracticeRepository {
                             dto.optionC ?: "",
                             dto.optionD ?: ""
                         ),
-                        difficulty = dto.difficulty
+                        difficulty = dto.difficulty,
+                        explanation = dto.explanation
                     )
                 }
             Resource.Success(questions)
@@ -426,7 +427,13 @@ class PracticeRepositoryImpl : PracticeRepository {
                 unansweredCount = response.unansweredCount,
                 submittedAt = response.submittedAt,
                 answers = response.answers.map {
-                    PracticeAnswer(it.questionId ?: it.matQuestionId ?: 0L, it.selectedOption, it.correctOption, it.isCorrect)
+                    PracticeAnswer(
+                        questionId = it.questionId ?: it.matQuestionId ?: 0L,
+                        selectedOption = it.selectedOption,
+                        correctOption = it.correctOption,
+                        isCorrect = it.isCorrect,
+                        explanation = it.explanation
+                    )
                 }
             )
             Resource.Success(attempt)

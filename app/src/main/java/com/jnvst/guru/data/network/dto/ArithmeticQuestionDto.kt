@@ -11,5 +11,6 @@ data class ArithmeticQuestionDto(
     val optionB: String? = null,
     val optionC: String? = null,
     val optionD: String? = null,
-    val difficulty: String
+    val difficulty: String,
+    val explanation: String? = null
 )

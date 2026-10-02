@@ -25,5 +25,6 @@ data class AnswerResponseDto(
     val matQuestionId: Long? = null,
     val selectedOption: String?,
     val correctOption: String?,
-    val isCorrect: Boolean
+    val isCorrect: Boolean,
+    val explanation: String? = null
 )

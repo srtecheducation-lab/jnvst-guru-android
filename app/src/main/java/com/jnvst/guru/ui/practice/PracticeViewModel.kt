@@ -408,7 +408,12 @@ class PracticeViewModel(
                         "D" -> 3
                         else -> -1
                     }
-                    question.copy(selectedOptionIndex = selectedIdx, correctOptionIndex = correctIdx)
+                    val explanation = answer?.explanation ?: question.explanation
+                    question.copy(
+                        selectedOptionIndex = selectedIdx,
+                        correctOptionIndex = correctIdx,
+                        explanation = explanation
+                    )
                 }
                 _questions.value = Resource.Success(updatedQuestions)
                 

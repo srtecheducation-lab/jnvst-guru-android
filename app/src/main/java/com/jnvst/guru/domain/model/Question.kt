@@ -10,5 +10,6 @@ data class Question(
     val optionImageUrls: List<String>? = null,
     val difficulty: String,
     var selectedOptionIndex: Int = -1,
-    var correctOptionIndex: Int = -1
+    var correctOptionIndex: Int = -1,
+    val explanation: String? = null
 )
